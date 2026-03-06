@@ -1,6 +1,6 @@
 # Catalogue des Tools — MCP Tools
 
-> **Version** : 0.1.0-draft | **Date** : 2026-03-05
+> **Version** : 0.1.3 | **Date** : 2026-03-06
 > **Référence** : Voir `ARCHITECTURE.md` pour le contexte global
 
 ---
@@ -30,10 +30,10 @@
 
 ### Utilitaires (2 tools)
 
-| Tool     | Opérations                                                                             | Params clés                                     | Source                    |
-| -------- | -------------------------------------------------------------------------------------- | ----------------------------------------------- | ------------------------- |
-| **date** | `now`, `today`, `diff`, `add`, `format`, `parse`, `week_number`, `day_of_week`         | date, operation, tz, days/hours/minutes, format | Dragonfly `date`          |
-| **calc** | `add`, `subtract`, `multiply`, `divide`, `mean`, `median`, `stdev`, `variance`, `eval` | operation, a, b, data, expr                     | Dragonfly `math` (subset) |
+| Tool        | Opérations                                                                     | Params clés                                                                           | Source                                     |
+| ----------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- | ------------------------------------------ |
+| **date** ✅ | `now`, `today`, `diff`, `add`, `format`, `parse`, `week_number`, `day_of_week` | date, operation, tz, days/hours/minutes, format                                       | Pure Python (datetime+zoneinfo) — 12 tests |
+| **calc** ✅ | Expression Python dans sandbox Docker isolée (math + statistics pré-importés)  | expr (expression Python, ex: `(3+5)*2`, `math.sqrt(144)`, `statistics.mean([1,2,3])`) | Sandbox Python Docker — 12 tests           |
 
 ### Meta (2 tools)
 
@@ -44,11 +44,11 @@
 
 ### Recherche Perplexity (3 tools)
 
-| Tool                  | Description                              | Params clés                                 | Source                             |
-| --------------------- | ---------------------------------------- | ------------------------------------------- | ---------------------------------- |
+| Tool                  | Description                              | Params clés                                                    | Source                             |
+| --------------------- | ---------------------------------------- | -------------------------------------------------------------- | ---------------------------------- |
 | **perplexity_search** | Recherche internet avec niveau de détail | query, detail_level (brief/normal/detailed), model (optionnel) | perplexity-mcp `search`            |
-| **perplexity_doc**    | Documentation d'une techno/lib/API       | query, context                              | perplexity-mcp `get_documentation` |
-| **perplexity_chat**   | Conversation continue avec historique    | message, chat_id (optionnel)                | perplexity-mcp `chat_perplexity`   |
+| **perplexity_doc** ✅ | Documentation d'une techno/lib/API       | query, context (optionnel), model (optionnel)                  | perplexity-mcp `get_documentation` — 3 tests |
+| ~~perplexity_chat~~   | ~~Conversation continue avec historique~~ | ~~message, chat_id~~ — **Abandonné**                          | —                                  |
 
 ---
 
@@ -123,7 +123,7 @@
 | **security-auditor**   | http, network, ssh_diagnostics, host_audit, pdf_search, doc_scraper, perplexity_search, perplexity_doc                  |
 | **dba**                | ssh, db, sqlite, files, calc, date, perplexity_search, generate                                                         |
 | **monitoring-analyst** | http, network, calc, date, files, perplexity_search, generate                                                           |
-| **doc-writer**         | files, pdf2text, pdf_search, office_to_pdf, doc_scraper, generate, perplexity_doc, perplexity_chat                      |
+| **doc-writer**         | files, pdf2text, pdf_search, office_to_pdf, doc_scraper, generate, perplexity_doc, perplexity_search                    |
 
 ---
 

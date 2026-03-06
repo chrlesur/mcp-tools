@@ -4,6 +4,16 @@ All notable changes to MCP Tools will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.1.3] — 2026-03-06
+
+### Added
+- **Nouveau tool `date`** — Manipulation de dates/heures (8 opérations : now, today, diff, add, format, parse, week_number, day_of_week). Fuseaux horaires via `zoneinfo` (stdlib). Parsing flexible : ISO 8601, DD/MM/YYYY, YYYYMMDD, etc. Sorties ISO 8601. **12 tests E2E**
+- **Nouveau tool `calc`** — Calculs mathématiques dans une **sandbox Python Docker** isolée (--network=none, --read-only, --cap-drop=ALL). Interface simplifiée : 1 seul param `expr` (expression Python). Modules `math` et `statistics` pré-importés. Respecte la priorité des opérations, parenthèses, fonctions math. Fallback local (SANDBOX_ENABLED=false). **12 tests E2E** (arithmétique, priorité, parenthèses, puissance, division/0, math.sqrt, math.pi, statistics.mean/median, sandbox, grands nombres, erreur syntaxe)
+- **Nouveau tool `perplexity_doc`** — Documentation technique via Perplexity AI. Params `query` (technologie/librairie/API) + `context` optionnel (aspect spécifique à approfondir). System prompt orienté syntaxe, exemples de code, bonnes pratiques. Citations incluses. **3 tests E2E**
+
+### Removed
+- **`perplexity_chat` abandonné** — Le tool de conversation continue avec Perplexity a été retiré de la roadmap Phase 1
+
 ## [0.1.2] — 2026-03-05
 
 ### Changed

@@ -576,18 +576,270 @@ async def test_06_perplexity():
         record("perplexity_search", False, str(e))
 
 
+async def test_06b_perplexity_doc():
+    """Test 6b: Outil perplexity_doc (nécessite clé API)"""
+    print("\n📚 TEST 6b — Outil perplexity_doc")
+    print("=" * 50)
+
+    # 6b-a. Doc simple (query seul)
+    try:
+        data = await call_tool("perplexity_doc", {
+            "query": "Python asyncio"
+        })
+
+        if data.get("status") == "error" and "non configurée" in data.get("message", ""):
+            record("perplexity_doc", False, "Clé API non configurée", skipped=True)
+            return
+
+        ok = data.get("status") == "success" and len(data.get("content", "")) > 0
+        content_preview = data.get("content", "")[:80]
+        record("perplexity_doc (query)", ok, f"{len(data.get('content',''))} chars: {content_preview}...")
+    except Exception as e:
+        record("perplexity_doc (query)", False, str(e))
+
+    # 6b-b. Doc avec context
+    try:
+        data = await call_tool("perplexity_doc", {
+            "query": "Python asyncio",
+            "context": "TaskGroup et gestion des exceptions"
+        })
+
+        ok = data.get("status") == "success" and len(data.get("content", "")) > 0
+        has_query = data.get("query") == "Python asyncio"
+        has_context = data.get("context") == "TaskGroup et gestion des exceptions"
+        record("perplexity_doc (context)", ok and has_query and has_context,
+               f"query={has_query}, context={has_context}, {len(data.get('content',''))} chars")
+    except Exception as e:
+        record("perplexity_doc (context)", False, str(e))
+
+    # 6b-c. Citations présentes
+    try:
+        citations = data.get("citations", [])
+        if citations:
+            record("perplexity_doc citations", True, f"{len(citations)} citations")
+    except Exception as e:
+        record("perplexity_doc citations", False, str(e))
+
+
+async def test_07_date():
+    """Test 7: Outil date (manipulation dates/heures)"""
+    print("\n🗓️ TEST 7 — Outil date")
+    print("=" * 50)
+
+    # 7a. now (UTC)
+    try:
+        data = await call_tool("date", {"operation": "now"})
+        ok = data.get("status") == "success" and "datetime" in data
+        record("date now (UTC)", ok, f"datetime={data.get('datetime', '?')[:25]}")
+    except Exception as e:
+        record("date now (UTC)", False, str(e))
+
+    # 7b. now avec timezone
+    try:
+        data = await call_tool("date", {"operation": "now", "tz": "Europe/Paris"})
+        ok = data.get("status") == "success" and "+01:00" in data.get("datetime", "") or "+02:00" in data.get("datetime", "")
+        record("date now (Europe/Paris)", ok, f"datetime={data.get('datetime', '?')[:25]}")
+    except Exception as e:
+        record("date now (Europe/Paris)", False, str(e))
+
+    # 7c. today
+    try:
+        data = await call_tool("date", {"operation": "today"})
+        ok = data.get("status") == "success" and "date" in data
+        record("date today", ok, f"date={data.get('date', '?')}")
+    except Exception as e:
+        record("date today", False, str(e))
+
+    # 7d. parse ISO
+    try:
+        data = await call_tool("date", {"operation": "parse", "date": "2026-03-06T10:30:00"})
+        ok = data.get("status") == "success" and "2026-03-06" in data.get("datetime", "")
+        record("date parse ISO", ok, f"datetime={data.get('datetime', '?')}")
+    except Exception as e:
+        record("date parse ISO", False, str(e))
+
+    # 7e. parse format DD/MM/YYYY
+    try:
+        data = await call_tool("date", {"operation": "parse", "date": "06/03/2026"})
+        ok = data.get("status") == "success" and "2026" in data.get("datetime", "")
+        record("date parse DD/MM/YYYY", ok, f"datetime={data.get('datetime', '?')}")
+    except Exception as e:
+        record("date parse DD/MM/YYYY", False, str(e))
+
+    # 7f. format strftime
+    try:
+        data = await call_tool("date", {"operation": "format", "date": "2026-03-06", "format": "%d/%m/%Y"})
+        ok = data.get("status") == "success" and data.get("result") == "06/03/2026"
+        record("date format strftime", ok, f"result={data.get('result', '?')}")
+    except Exception as e:
+        record("date format strftime", False, str(e))
+
+    # 7g. add (jours)
+    try:
+        data = await call_tool("date", {"operation": "add", "date": "2026-03-06", "days": 10})
+        ok = data.get("status") == "success" and "2026-03-16" in data.get("result", "")
+        record("date add +10 jours", ok, f"result={data.get('result', '?')[:16]}")
+    except Exception as e:
+        record("date add +10 jours", False, str(e))
+
+    # 7h. diff entre 2 dates
+    try:
+        data = await call_tool("date", {"operation": "diff", "date": "2026-01-01", "date2": "2026-03-06"})
+        ok = data.get("status") == "success" and data.get("diff_days") == 64
+        record("date diff (64 jours)", ok, f"diff_days={data.get('diff_days', '?')}, human={data.get('diff_human', '?')}")
+    except Exception as e:
+        record("date diff (64 jours)", False, str(e))
+
+    # 7i. week_number
+    try:
+        data = await call_tool("date", {"operation": "week_number", "date": "2026-03-06"})
+        ok = data.get("status") == "success" and isinstance(data.get("week_number"), int)
+        record("date week_number", ok, f"week={data.get('week_number', '?')}")
+    except Exception as e:
+        record("date week_number", False, str(e))
+
+    # 7j. day_of_week
+    try:
+        data = await call_tool("date", {"operation": "day_of_week", "date": "2026-03-06"})
+        ok = data.get("status") == "success" and data.get("day_name_en") == "Friday"
+        record("date day_of_week", ok, f"day={data.get('day_name_en', '?')} ({data.get('day_name_fr', '?')})")
+    except Exception as e:
+        record("date day_of_week", False, str(e))
+
+    # 7k. opération invalide
+    try:
+        data = await call_tool("date", {"operation": "invalid_op"})
+        ok = data.get("status") == "error" and "inconnue" in data.get("message", "").lower()
+        record("date opération invalide", ok, data.get("message", "?")[:60])
+    except Exception as e:
+        record("date opération invalide", False, str(e))
+
+    # 7l. timezone invalide
+    try:
+        data = await call_tool("date", {"operation": "now", "tz": "Invalid/Zone"})
+        ok = data.get("status") == "error" and "fuseau" in data.get("message", "").lower()
+        record("date timezone invalide", ok, data.get("message", "?")[:60])
+    except Exception as e:
+        record("date timezone invalide", False, str(e))
+
+
+async def test_08_calc():
+    """Test 8: Outil calc (sandbox Python)"""
+    print("\n🧮 TEST 8 — Outil calc (sandbox Python)")
+    print("=" * 50)
+
+    # 8a. Arithmétique simple
+    try:
+        data = await call_tool("calc", {"expr": "17.5 + 42.3"})
+        ok = data.get("status") == "success" and data.get("result") == 59.8
+        record("calc 17.5+42.3", ok, f"result={data.get('result', '?')}")
+    except Exception as e:
+        record("calc addition", False, str(e))
+
+    # 8b. Priorité des opérations
+    try:
+        data = await call_tool("calc", {"expr": "2 + 3 * 4"})
+        ok = data.get("status") == "success" and data.get("result") == 14
+        record("calc priorité (2+3*4=14)", ok, f"result={data.get('result', '?')}")
+    except Exception as e:
+        record("calc priorité", False, str(e))
+
+    # 8c. Parenthèses complexes
+    try:
+        data = await call_tool("calc", {"expr": "(3 + 5) * (2 - 1) + (10 / 2)"})
+        ok = data.get("status") == "success" and data.get("result") == 13.0
+        record("calc parenthèses complexes", ok, f"result={data.get('result', '?')}")
+    except Exception as e:
+        record("calc parenthèses", False, str(e))
+
+    # 8d. Puissance
+    try:
+        data = await call_tool("calc", {"expr": "2 ** 10"})
+        ok = data.get("status") == "success" and data.get("result") == 1024
+        record("calc puissance (2¹⁰=1024)", ok, f"result={data.get('result', '?')}")
+    except Exception as e:
+        record("calc puissance", False, str(e))
+
+    # 8e. Division par zéro
+    try:
+        data = await call_tool("calc", {"expr": "42 / 0"})
+        ok = data.get("status") == "error"
+        record("calc division par zéro", ok, data.get("message", "?")[:60])
+    except Exception as e:
+        record("calc division par zéro", False, str(e))
+
+    # 8f. math.sqrt + abs
+    try:
+        data = await call_tool("calc", {"expr": "math.sqrt(144) + abs(-5)"})
+        ok = data.get("status") == "success" and data.get("result") == 17.0
+        record("calc math.sqrt+abs", ok, f"result={data.get('result', '?')}")
+    except Exception as e:
+        record("calc math.sqrt+abs", False, str(e))
+
+    # 8g. math.pi
+    try:
+        data = await call_tool("calc", {"expr": "round(2 * math.pi, 4)"})
+        ok = data.get("status") == "success" and data.get("result") == 6.2832
+        record("calc 2*π arrondi", ok, f"result={data.get('result', '?')}")
+    except Exception as e:
+        record("calc 2*pi", False, str(e))
+
+    # 8h. statistics.mean
+    try:
+        data = await call_tool("calc", {"expr": "statistics.mean([10, 20, 30, 40, 50])"})
+        ok = data.get("status") == "success" and data.get("result") == 30
+        record("calc statistics.mean", ok, f"result={data.get('result', '?')}")
+    except Exception as e:
+        record("calc statistics.mean", False, str(e))
+
+    # 8i. statistics.median
+    try:
+        data = await call_tool("calc", {"expr": "statistics.median([3, 1, 4, 1, 5, 9, 2, 6])"})
+        ok = data.get("status") == "success" and data.get("result") == 3.5
+        record("calc statistics.median", ok, f"result={data.get('result', '?')}")
+    except Exception as e:
+        record("calc statistics.median", False, str(e))
+
+    # 8j. Sandbox active
+    try:
+        data = await call_tool("calc", {"expr": "1 + 1"})
+        is_sandbox = data.get("sandbox", None)
+        record("calc sandbox active", is_sandbox is True, f"sandbox={is_sandbox}")
+    except Exception as e:
+        record("calc sandbox active", False, str(e))
+
+    # 8k. Grand nombre (pas d'overflow)
+    try:
+        data = await call_tool("calc", {"expr": "2 ** 100"})
+        ok = data.get("status") == "success" and data.get("result") == 1267650600228229401496703205376
+        record("calc 2¹⁰⁰ (grand nombre)", ok, f"result={str(data.get('result', '?'))[:30]}")
+    except Exception as e:
+        record("calc grand nombre", False, str(e))
+
+    # 8l. Erreur syntaxe
+    try:
+        data = await call_tool("calc", {"expr": "2 +* 3"})
+        ok = data.get("status") == "error"
+        record("calc erreur syntaxe", ok, data.get("message", "?")[:60])
+    except Exception as e:
+        record("calc erreur syntaxe", False, str(e))
+
+
 # =============================================================================
 # Main
 # =============================================================================
 
 # Registre des tests (nom → fonction)
 TEST_REGISTRY = {
-    "connectivity": test_01_connectivity,
-    "auth":         test_02_auth,
-    "shell":        test_03_shell,
-    "network":      test_04_network,
-    "http":         test_05_http,
-    "perplexity":   test_06_perplexity,
+    "connectivity":    test_01_connectivity,
+    "auth":            test_02_auth,
+    "shell":           test_03_shell,
+    "network":         test_04_network,
+    "http":            test_05_http,
+    "perplexity":      test_06_perplexity,
+    "perplexity_doc":  test_06b_perplexity_doc,
+    "date":            test_07_date,
+    "calc":            test_08_calc,
 }
 
 
@@ -628,6 +880,9 @@ async def run_all_tests(only: str = None):
         await test_04_network()
         await test_05_http()
         await test_06_perplexity()
+        await test_06b_perplexity_doc()
+        await test_07_date()
+        await test_08_calc()
 
     # Résumé
     elapsed = round(time.monotonic() - t0, 1)

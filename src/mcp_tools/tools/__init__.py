@@ -14,9 +14,13 @@ def register_all_tools(mcp: FastMCP) -> None:
     from . import network
     from . import http
     from . import perplexity
+    from . import date
+    from . import calc
     
     # Enregistrement
     shell.register(mcp)
     network.register(mcp)
     http.register(mcp)
     perplexity.register(mcp)
+    date.register(mcp)
+    calc.register(mcp)

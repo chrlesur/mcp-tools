@@ -102,7 +102,7 @@ HealthCheckMiddleware → AuthMiddleware → LoggingMiddleware → FastMCP strea
 | Shell interactif | `scripts/cli/shell.py`       | Interface interactive      |
 | Affichage        | `scripts/cli/display.py`     | Rich partagé (couches 2+3) |
 
-### Outils disponibles (Phase 1)
+### Outils disponibles (9/27 — Phase 1)
 
 | Outil              | Description                                          |
 | ------------------ | ---------------------------------------------------- |
@@ -110,6 +110,9 @@ HealthCheckMiddleware → AuthMiddleware → LoggingMiddleware → FastMCP strea
 | `network`          | Diagnostic réseau en sandbox Docker (ping, traceroute, nslookup, dig) — IPs privées RFC 1918 interdites |
 | `http`             | Client HTTP/REST en sandbox Docker (anti-SSRF, auth basic/bearer/api_key) — IPs privées bloquées |
 | `perplexity_search`| Recherche internet via Perplexity AI                 |
+| `perplexity_doc`   | Documentation technique d'une technologie/librairie/API via Perplexity AI |
+| `date`             | Manipulation de dates/heures (now, today, diff, add, format, parse, week_number, day_of_week) — fuseaux horaires |
+| `calc`             | Calculs mathématiques en sandbox Python Docker (expressions, math, statistics) — sans réseau |
 | `system_health`    | Santé du service                                     |
 | `system_about`     | Métadonnées et liste des outils                      |
 
@@ -172,8 +175,8 @@ mcp-tools/
 
 ## Roadmap
 
-- **Phase 1** (actuel) : shell, network, http, perplexity_search — ✅
-- **Phase 1** (à faire) : ssh, docker, files, date, calc, generate, mcp_call, perplexity_doc/chat
+- **Phase 1** (actuel) : shell, network, http, perplexity_search, perplexity_doc, date, calc — ✅
+- **Phase 1** (à faire) : ssh, docker, files, generate, mcp_call
 - **Phase 2** : git, s3, db, host_audit, ssh_diagnostics, sqlite, script_executor, email_send, pdf, doc_scraper
 - **Phase 3** : imap, perplexity_api, perplexity_deprecated
 
