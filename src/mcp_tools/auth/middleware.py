@@ -63,6 +63,7 @@ class AuthMiddleware:
     def _validate_token(self, token: str) -> Optional[dict]:
         settings = get_settings()
 
+        # 1. Bootstrap key admin (fast path)
         if token == settings.admin_bootstrap_key:
             return {
                 "client_name": "admin",
@@ -70,8 +71,12 @@ class AuthMiddleware:
                 "tool_ids": [],  # Admin = all tools
             }
 
-        # TODO : Phase 2 (intégration S3 tokens via core.tokens.py)
-        # Pour l'instant on se repose sur bootstrap key
+        # 2. Lookup dans le Token Store S3
+        from .token_store import get_token_store
+        store = get_token_store()
+        token_info = store.validate_token(token)
+        if token_info is not None:
+            return token_info
 
         return None
 

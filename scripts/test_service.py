@@ -1172,6 +1172,156 @@ async def test_10_files():
         record("files S3 list vide (cleanup)", False, str(e))
 
 
+async def test_11_token():
+    """Test 11: Outil token (gestion des tokens, admin)"""
+    print("\n🔑 TEST 11 — Outil token (gestion tokens)")
+    print("=" * 50)
+
+    created_token = None
+    test_client = "e2e-test-agent"
+
+    # 11a. Opération invalide
+    try:
+        data = await call_tool("token", {"operation": "invalid_op"})
+        ok = data.get("status") == "error" and "non supportée" in data.get("message", "")
+        record("token opération invalide", ok, data.get("message", "?")[:60])
+    except Exception as e:
+        record("token opération invalide", False, str(e))
+
+    # 11b. Create sans client_name
+    try:
+        data = await call_tool("token", {"operation": "create"})
+        ok = data.get("status") == "error" and "client_name" in data.get("message", "").lower()
+        record("token create sans name", ok, data.get("message", "?")[:60])
+    except Exception as e:
+        record("token create sans name", False, str(e))
+
+    # 11c. Create token avec tool_ids restreints
+    try:
+        data = await call_tool("token", {
+            "operation": "create",
+            "client_name": test_client,
+            "tool_ids": ["date", "calc"],
+            "permissions": ["read", "write"],
+            "expires_days": 1,
+        })
+        if data.get("status") == "error" and "S3" in data.get("message", ""):
+            record("token create", False, "S3 non disponible pour tokens", skipped=True)
+            return
+        ok = data.get("status") == "success" and "token" in data
+        created_token = data.get("token", "")
+        record("token create", ok, f"client={data.get('client_name', '?')}, tool_ids={data.get('tool_ids', [])}")
+    except Exception as e:
+        record("token create", False, str(e))
+        return
+
+    # 11d. Create doublon refusé
+    try:
+        data = await call_tool("token", {
+            "operation": "create",
+            "client_name": test_client,
+            "tool_ids": ["shell"],
+        })
+        ok = data.get("status") == "error" and "existe déjà" in data.get("message", "")
+        record("token create doublon refusé", ok, data.get("message", "?")[:60])
+    except Exception as e:
+        record("token create doublon refusé", False, str(e))
+
+    # 11e. List contient le token créé
+    try:
+        data = await call_tool("token", {"operation": "list"})
+        ok = data.get("status") == "success" and data.get("count", 0) >= 1
+        found = any(t.get("client_name") == test_client for t in data.get("tokens", []))
+        record("token list", ok and found, f"count={data.get('count', '?')}, found={found}")
+    except Exception as e:
+        record("token list", False, str(e))
+
+    # 11f. Info du token
+    try:
+        data = await call_tool("token", {"operation": "info", "client_name": test_client})
+        ok = data.get("status") == "success" and data.get("client_name") == test_client
+        record("token info", ok, f"client={data.get('client_name', '?')}, expired={data.get('expired', '?')}")
+    except Exception as e:
+        record("token info", False, str(e))
+
+    # 11g. Auth avec le token client — outil autorisé (date)
+    if created_token:
+        try:
+            from mcp import ClientSession
+            from mcp.client.streamable_http import streamablehttp_client
+
+            headers = {"Authorization": f"Bearer {created_token}"}
+            async with streamablehttp_client(
+                f"{BASE_URL}/mcp", headers=headers, timeout=15, sse_read_timeout=30,
+            ) as (read, write, _):
+                async with ClientSession(read, write) as session:
+                    await session.initialize()
+                    result = await session.call_tool("date", {"operation": "now"})
+                    text = getattr(result.content[0], "text", "") if result.content else ""
+                    data = json.loads(text) if text else {}
+                    ok = data.get("status") == "success"
+                    record("token auth → date (autorisé)", ok, f"datetime={data.get('datetime', '?')[:20]}")
+        except Exception as e:
+            record("token auth → date (autorisé)", False, str(e))
+
+    # 11h. Auth avec le token client — outil interdit (shell)
+    if created_token:
+        try:
+            from mcp import ClientSession
+            from mcp.client.streamable_http import streamablehttp_client
+
+            headers = {"Authorization": f"Bearer {created_token}"}
+            async with streamablehttp_client(
+                f"{BASE_URL}/mcp", headers=headers, timeout=15, sse_read_timeout=30,
+            ) as (read, write, _):
+                async with ClientSession(read, write) as session:
+                    await session.initialize()
+                    result = await session.call_tool("shell", {"command": "echo hack"})
+                    text = getattr(result.content[0], "text", "") if result.content else ""
+                    data = json.loads(text) if text else {}
+                    ok = data.get("status") == "error" and "refusé" in data.get("message", "").lower()
+                    record("token auth → shell (refusé)", ok, data.get("message", "?")[:60])
+        except Exception as e:
+            record("token auth → shell (refusé)", False, str(e))
+
+    # 11i. Revoke
+    try:
+        data = await call_tool("token", {"operation": "revoke", "client_name": test_client})
+        ok = data.get("status") == "success"
+        record("token revoke", ok, data.get("message", "?")[:60])
+    except Exception as e:
+        record("token revoke", False, str(e))
+
+    # 11j. Auth après revoke → 401
+    if created_token:
+        try:
+            data = await call_rest(
+                "POST", "/mcp",
+                headers={"Authorization": f"Bearer {created_token}"},
+                json_body={"jsonrpc": "2.0", "method": "initialize", "id": 1}
+            )
+            ok = data["status_code"] == 401
+            record("token auth après revoke → 401", ok, f"HTTP {data['status_code']} (attendu: 401)")
+        except Exception as e:
+            record("token auth après revoke → 401", False, str(e))
+
+    # 11k. List vide après revoke
+    try:
+        data = await call_tool("token", {"operation": "list"})
+        ok = data.get("status") == "success" and data.get("count", -1) == 0
+        record("token list vide après revoke", ok, f"count={data.get('count', '?')}")
+    except Exception as e:
+        record("token list vide après revoke", False, str(e))
+
+    # 11l. Info token non trouvé
+    try:
+        data = await call_tool("token", {"operation": "info", "client_name": "inexistant"})
+        ok = data.get("status") == "error" and "non trouvé" in data.get("message", "")
+        record("token info non trouvé", ok, data.get("message", "?")[:60])
+    except Exception as e:
+        record("token info non trouvé", False, str(e))
+
+
 # =============================================================================
 # Main
 # =============================================================================
@@ -1189,6 +1339,7 @@ TEST_REGISTRY = {
     "calc":            test_08_calc,
     "ssh":             test_09_ssh,
     "files":           test_10_files,
+    "token":           test_11_token,
 }
 
 
@@ -1234,6 +1385,7 @@ async def run_all_tests(only: str = None):
         await test_08_calc()
         await test_09_ssh()
         await test_10_files()
+        await test_11_token()
 
     # Résumé
     elapsed = round(time.monotonic() - t0, 1)

@@ -16,7 +16,7 @@ from .display import (
     show_shell_result, show_network_result,
     show_http_result, show_perplexity_result,
     show_date_result, show_calc_result, show_doc_result,
-    show_ssh_result, show_files_result,
+    show_ssh_result, show_files_result, show_token_result,
 )
 
 
@@ -33,6 +33,7 @@ SHELL_COMMANDS = {
     "doc":        "doc <query> [context] — Documentation technique via Perplexity",
     "ssh":        "ssh <op> <host> <user> [options] — exec, status, upload, download",
     "files":      "files <op> [options] — list, read, write, delete, info, diff (S3)",
+    "token":      "token <op> [options] — create, list, info, revoke (admin)",
     "quit":       "Quitter le shell",
 }
 
@@ -289,6 +290,51 @@ async def cmd_files(client, state, args="", json_output=False):
         show_files_result(result)
 
 
+TOKEN_OPS = ("create", "list", "info", "revoke")
+
+
+async def cmd_token(client, state, args="", json_output=False):
+    parts = args.strip().split()
+    if not parts or parts[0] not in TOKEN_OPS:
+        show_warning("Usage: token <op> [options...]")
+        show_warning("")
+        show_warning("  token create agent-prod --tools shell,date,calc --expires 90")
+        show_warning("  token create readonly --permissions read --tools date,calc")
+        show_warning("  token list")
+        show_warning("  token info agent-prod")
+        show_warning("  token revoke agent-prod")
+        return
+    op = parts[0]
+    params = {"operation": op}
+    # Parser les options --key value
+    i = 1
+    positional = []
+    while i < len(parts):
+        if parts[i].startswith("--") and i + 1 < len(parts):
+            key = parts[i][2:].replace("-", "_")
+            val = parts[i + 1]
+            if key == "expires" or key == "expires_days":
+                params["expires_days"] = int(val)
+            elif key == "tools":
+                params["tool_ids"] = [t.strip() for t in val.split(",") if t.strip()]
+            elif key == "permissions":
+                params["permissions"] = [p.strip() for p in val.split(",") if p.strip()]
+            else:
+                params[key] = val
+            i += 2
+        else:
+            positional.append(parts[i])
+            i += 1
+    # Le premier argument positionnel après l'op est le client_name
+    if positional:
+        params["client_name"] = positional[0]
+    result = await client.call_tool("token", params)
+    if json_output:
+        show_json(result)
+    else:
+        show_token_result(result)
+
+
 def cmd_help():
     from rich.table import Table
     table = Table(title="🐚 Commandes disponibles", show_header=True)
@@ -360,6 +406,8 @@ async def run_shell(url: str, token: str):
                 await cmd_ssh(client, state, args, json_output)
             elif command == "files":
                 await cmd_files(client, state, args, json_output)
+            elif command == "token":
+                await cmd_token(client, state, args, json_output)
             else:
                 show_warning(f"Commande inconnue: '{command}'. Tapez 'help'.")
 

@@ -1,8 +1,8 @@
 # Architecture — MCP Tools
 
-> **Version** : 0.1.4 | **Date** : 2026-03-06 | **Auteur** : Cloud Temple
+> **Version** : 0.1.5 | **Date** : 2026-03-06 | **Auteur** : Cloud Temple
 > **Projet** : mcp-tools | **Licence** : Apache 2.0
-> **Statut** : 🚧 Implémentation en cours — 11/27 tools validés (shell, network, http, ssh, files, perplexity_search, perplexity_doc, date, calc, system_health, system_about)
+> **Statut** : 🚧 Implémentation en cours — 12/27 tools validés (shell, network, http, ssh, files, token, perplexity_search, perplexity_doc, date, calc, system_health, system_about) + Token Manager S3
 
 ---
 
@@ -55,7 +55,9 @@ Les agents (via MCP Agent) appellent MCP Tools pour exécuter des actions concr�
 │  └──────────────────────────────────────────────────┘  │
 │                                                        │
 │  ┌──────────────────────────────────────────────────┐  │
-│  │  Token Manager (starter-kit, S3)                 │  │
+│  │  Token Manager (S3 Dell ECS)                     │  │
+│  │  _tokens/{sha256}.json — cache TTL 5min          │  │
+│  │  create/list/info/revoke — admin only            │  │
 │  └──────────────────────────────────────────────────┘  │
 └──────────────────────────┬─────────────────────────────┘
                            │
@@ -343,10 +345,11 @@ mcp-tools/
 │   ├── __main__.py
 │   ├── server.py              # Outils système + create_app() + bannière
 │   ├── config.py              # Config (S3, Perplexity, sandbox, limites)
-│   ├── auth/                  # Auth standard (starter-kit)
+│   ├── auth/                  # Auth + Token Manager
 │   │   ├── __init__.py
-│   │   ├── middleware.py      # + check_tool_access()
-│   │   └── context.py
+│   │   ├── middleware.py      # Bootstrap key + Token Store S3 lookup
+│   │   ├── context.py         # check_tool_access() via ContextVar
+│   │   └── token_store.py     # ✅ Token Store S3 + cache mémoire TTL 5min
 │   └── tools/
 │       ├── __init__.py        # register_all_tools(mcp)
 │       ├── shell.py           # ✅ Shell sandbox Docker éphémère (--network=none)
@@ -358,6 +361,7 @@ mcp-tools/
 │       ├── files.py           # ✅ Fichiers S3 Dell ECS sandbox (--network=bridge, boto3 hybride SigV2/SigV4, versioning)
 │       ├── date.py            # ✅ Date/heure/timezone (pure Python, 12 tests)
 │       ├── calc.py            # ✅ Calculs math (sandbox Python Docker, 12 tests)
+│       ├── token.py           # ✅ Token CRUD admin (create/list/info/revoke, 12 tests)
 │       ├── generate.py        # 📐 Génération fichiers (Jinja2)
 │       ├── mcp_call.py        # 📐 Appel MCP externe
 │       ├── git.py             # 📐 Git local + GitHub

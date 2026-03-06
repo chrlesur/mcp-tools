@@ -202,6 +202,10 @@ def main():
 
     print("\n" + _build_banner() + "\n", file=sys.stderr)
 
+    # Initialiser le Token Store (charge les tokens depuis S3)
+    from .auth.token_store import init_token_store
+    init_token_store()
+
     app = create_app()
 
     uvicorn.run(

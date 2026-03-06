@@ -1,6 +1,6 @@
 # Catalogue des Tools — MCP Tools
 
-> **Version** : 0.1.4 | **Date** : 2026-03-06
+> **Version** : 0.1.5 | **Date** : 2026-03-06
 > **Référence** : Voir `ARCHITECTURE.md` pour le contexte global
 
 ---
@@ -41,6 +41,12 @@
 | ------------ | ------------------------------------------- | ---------------------------------------- | ---------------------- |
 | **generate** | `from_template`, `markdown`, `json`, `yaml` | template, variables, format, output_path | From scratch (Jinja2)  |
 | **mcp_call** | Appel MCP générique                         | mcp_name, tool_name, params              | From scratch (SDK MCP) |
+
+### Auth (1 tool)
+
+| Tool        | Opérations                                                                                                      | Params clés                                                                                                      | Source                        |
+| ----------- | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| **token** ✅ | `create`, `list`, `info`, `revoke` — Admin uniquement. Tokens stockés en S3 (`_tokens/{sha256}.json`), cache mémoire TTL 5min. Chaque token restreint l'accès via `tool_ids` | client_name, permissions, tool_ids, expires_days. Token brut affiché une seule fois à la création — 12 tests E2E | Token Store S3 (from scratch) |
 
 ### Recherche Perplexity (3 tools)
 

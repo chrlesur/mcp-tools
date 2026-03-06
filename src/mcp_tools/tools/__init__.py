@@ -18,6 +18,7 @@ def register_all_tools(mcp: FastMCP) -> None:
     from . import calc
     from . import ssh
     from . import files
+    from . import token
     
     # Enregistrement
     shell.register(mcp)
@@ -28,3 +29,4 @@ def register_all_tools(mcp: FastMCP) -> None:
     calc.register(mcp)
     ssh.register(mcp)
     files.register(mcp)
+    token.register(mcp)

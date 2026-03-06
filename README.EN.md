@@ -117,7 +117,7 @@ HealthCheckMiddleware → AuthMiddleware → LoggingMiddleware → FastMCP strea
 | Interactive Shell| `scripts/cli/shell.py`       | Interactive interface      |
 | Display          | `scripts/cli/display.py`     | Shared Rich output (2+3)  |
 
-### Available Tools (11/27 — Phase 1)
+### Available Tools (12/27 — Phase 1)
 
 | Tool               | Description                                          |
 | ------------------ | ---------------------------------------------------- |
@@ -130,6 +130,7 @@ HealthCheckMiddleware → AuthMiddleware → LoggingMiddleware → FastMCP strea
 | `perplexity_doc`   | Technical documentation for a technology/library/API via Perplexity AI |
 | `date`             | Date/time manipulation (now, today, diff, add, format, parse, week_number, day_of_week) — timezone support |
 | `calc`             | Math calculations in Python Docker sandbox (expressions, math, statistics) — no network |
+| `token`            | MCP authentication token management (create, list, info, revoke) — admin only, tool_ids isolation |
 | `system_health`    | Service health check                                 |
 | `system_about`     | Metadata and tool listing                            |
 

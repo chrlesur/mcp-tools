@@ -22,7 +22,7 @@ from .display import (
     show_shell_result, show_network_result,
     show_http_result, show_perplexity_result,
     show_date_result, show_calc_result, show_doc_result,
-    show_ssh_result, show_files_result,
+    show_ssh_result, show_files_result, show_token_result,
 )
 
 
@@ -506,6 +506,103 @@ def files_cmd(ctx, operation, s3_path, path2, content, prefix, max_keys, endpoin
             show_json(result)
         else:
             show_files_result(result)
+    asyncio.run(_run())
+
+
+# =============================================================================
+# Outil token (gestion des tokens)
+# =============================================================================
+
+@cli.group("token")
+@click.pass_context
+def token_group(ctx):
+    """🔑 Gestion des tokens d'authentification MCP (admin uniquement).
+
+    \b
+    Sous-commandes : create, list, info, revoke.
+    Chaque token restreint l'accès aux outils via tool_ids.
+    """
+    pass
+
+
+@token_group.command("create")
+@click.argument("name")
+@click.option("--tools", "-t", "tool_ids_str", default="", help="Outils autorisés (séparés par virgule). Vide = tous.")
+@click.option("--permissions", "-p", default="read,write", help="Permissions (séparées par virgule)")
+@click.option("--expires", "-e", default=90, type=int, help="Expiration en jours (0 = jamais)")
+@click.option("--json", "-j", "output_json", is_flag=True, help="Sortie JSON brute")
+@click.pass_context
+def token_create(ctx, name, tool_ids_str, permissions, expires, output_json):
+    """Créer un nouveau token.
+
+    \b
+    Exemples :
+      token create agent-prod --tools shell,date,calc --expires 90
+      token create cline-dev --tools shell,http,network,date,calc --expires 365
+      token create readonly-agent --permissions read --tools date,calc
+    """
+    async def _run():
+        client = MCPClient(ctx.obj["url"], ctx.obj["token"])
+        tools = [t.strip() for t in tool_ids_str.split(",") if t.strip()] if tool_ids_str else []
+        perms = [p.strip() for p in permissions.split(",") if p.strip()]
+        result = await client.call_tool("token", {
+            "operation": "create",
+            "client_name": name,
+            "tool_ids": tools,
+            "permissions": perms,
+            "expires_days": expires,
+        })
+        if output_json:
+            show_json(result)
+        else:
+            show_token_result(result)
+    asyncio.run(_run())
+
+
+@token_group.command("list")
+@click.option("--json", "-j", "output_json", is_flag=True, help="Sortie JSON brute")
+@click.pass_context
+def token_list(ctx, output_json):
+    """Lister tous les tokens."""
+    async def _run():
+        client = MCPClient(ctx.obj["url"], ctx.obj["token"])
+        result = await client.call_tool("token", {"operation": "list"})
+        if output_json:
+            show_json(result)
+        else:
+            show_token_result(result)
+    asyncio.run(_run())
+
+
+@token_group.command("info")
+@click.argument("name")
+@click.option("--json", "-j", "output_json", is_flag=True, help="Sortie JSON brute")
+@click.pass_context
+def token_info(ctx, name, output_json):
+    """Détails d'un token par nom client."""
+    async def _run():
+        client = MCPClient(ctx.obj["url"], ctx.obj["token"])
+        result = await client.call_tool("token", {"operation": "info", "client_name": name})
+        if output_json:
+            show_json(result)
+        else:
+            show_token_result(result)
+    asyncio.run(_run())
+
+
+@token_group.command("revoke")
+@click.argument("name")
+@click.option("--json", "-j", "output_json", is_flag=True, help="Sortie JSON brute")
+@click.pass_context
+def token_revoke(ctx, name, output_json):
+    """Révoquer (supprimer) un token par nom client."""
+    async def _run():
+        client = MCPClient(ctx.obj["url"], ctx.obj["token"])
+        result = await client.call_tool("token", {"operation": "revoke", "client_name": name})
+        if output_json:
+            show_json(result)
+        else:
+            show_token_result(result)
     asyncio.run(_run())
 
 

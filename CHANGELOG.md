@@ -4,6 +4,16 @@ All notable changes to MCP Tools will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.1.5] — 2026-03-06
+
+### Added
+- **Nouveau tool `token`** — Gestion des tokens d'authentification MCP (admin uniquement). 4 opérations : `create`, `list`, `info`, `revoke`. Chaque token restreint l'accès aux outils via `tool_ids`. **12 tests E2E** (validation, CRUD, auth autorisée/refusée, revoke + 401, doublon)
+- **Token Store S3** (`src/mcp_tools/auth/token_store.py`) — Tokens stockés en S3 sous `_tokens/{sha256_hash}.json`. Cache mémoire avec TTL 5 min. SHA-256 du token comme clé (token brut jamais persisté). Config hybride SigV2/SigV4 Dell ECS
+- **Middleware auth étendu** — En plus du `ADMIN_BOOTSTRAP_KEY`, le middleware valide les tokens clients depuis le Token Store S3. Vérification expiration. Injection `tool_ids` dans le contexte pour `check_tool_access()`
+- **CLI Click** — Groupe `token` avec sous-commandes `create`, `list`, `info`, `revoke`. Options `--tools`, `--permissions`, `--expires`
+- **Shell interactif** — Commande `token` avec parsing `--tools`, `--permissions`, `--expires`
+- **Affichage Rich** — `show_token_result()` avec panel jaune pour le token brut (affiché une seule fois), table des tokens, détails info
+
 ## [0.1.4] — 2026-03-06
 
 ### Added

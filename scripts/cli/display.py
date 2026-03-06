@@ -347,6 +347,96 @@ def show_files_result(result: dict):
 
 
 # =============================================================================
+# Affichage outil token
+# =============================================================================
+
+def show_token_result(result: dict):
+    status = result.get("status", "?")
+    operation = result.get("operation", "")
+
+    icon = "✅" if status == "success" else "❌"
+
+    if status == "error":
+        console.print(f"\n{icon} [bold]token[/bold]")
+        console.print(f"[red]{result.get('message', 'Erreur')}[/red]")
+        return
+
+    # --- CREATE ---
+    if "token" in result:
+        raw_token = result.get("token", "")
+        client_name = result.get("client_name", "?")
+        console.print(f"\n{icon} [bold]Token créé pour '{client_name}'[/bold]")
+        console.print(Panel.fit(
+            f"[bold yellow]{raw_token}[/bold yellow]",
+            title="⚠️  TOKEN (sauvegardez-le maintenant !)",
+            border_style="yellow",
+        ))
+        console.print(f"  Client      : [cyan]{client_name}[/cyan]")
+        console.print(f"  Permissions : [green]{', '.join(result.get('permissions', []))}[/green]")
+        tool_ids = result.get("tool_ids", [])
+        if tool_ids:
+            console.print(f"  Outils      : [cyan]{', '.join(tool_ids)}[/cyan]")
+        else:
+            console.print(f"  Outils      : [dim](tous — aucune restriction tool_ids)[/dim]")
+        console.print(f"  Expire      : {result.get('expires_at', 'jamais')}")
+        console.print(f"  Hash        : [dim]{result.get('token_hash', '?')}[/dim]")
+        return
+
+    # --- LIST ---
+    tokens = result.get("tokens")
+    if tokens is not None:
+        count = result.get("count", 0)
+        console.print(f"\n{icon} [bold]{count} token(s)[/bold]")
+        if tokens:
+            table = Table(show_header=True)
+            table.add_column("Client", style="cyan bold", min_width=15)
+            table.add_column("Permissions", style="green")
+            table.add_column("Outils (tool_ids)", style="white")
+            table.add_column("Expire", style="dim")
+            table.add_column("Créé par", style="dim")
+            for t in tokens:
+                tool_str = ", ".join(t.get("tool_ids", [])) or "(tous)"
+                exp = t.get("expires_at", "jamais") or "jamais"
+                if t.get("expired"):
+                    exp = f"[red]{exp[:10]} (EXPIRÉ)[/red]"
+                elif exp != "jamais":
+                    exp = exp[:10]
+                table.add_row(
+                    t.get("client_name", "?"),
+                    ", ".join(t.get("permissions", [])),
+                    tool_str,
+                    exp,
+                    t.get("created_by", "?"),
+                )
+            console.print(table)
+        return
+
+    # --- INFO ---
+    if "client_name" in result:
+        cn = result.get("client_name", "?")
+        console.print(f"\n{icon} [bold]Token : {cn}[/bold]")
+        console.print(f"  Permissions : [green]{', '.join(result.get('permissions', []))}[/green]")
+        tool_ids = result.get("tool_ids", [])
+        if tool_ids:
+            console.print(f"  Outils      : [cyan]{', '.join(tool_ids)}[/cyan]")
+        else:
+            console.print(f"  Outils      : [dim](tous)[/dim]")
+        console.print(f"  Créé le     : {result.get('created_at', '?')[:19]}")
+        exp = result.get("expires_at") or "jamais"
+        if result.get("expired"):
+            console.print(f"  Expire      : [red]{exp[:19]} (EXPIRÉ)[/red]")
+        else:
+            console.print(f"  Expire      : {exp[:19] if exp != 'jamais' else exp}")
+        console.print(f"  Créé par    : {result.get('created_by', '?')}")
+        console.print(f"  Hash        : [dim]{result.get('token_hash_prefix', '?')}[/dim]")
+        return
+
+    # --- REVOKE / generic ---
+    if result.get("message"):
+        console.print(f"\n{icon} [bold]token[/bold] — {result['message']}")
+
+
+# =============================================================================
 # Affichage outil perplexity
 # =============================================================================
 
