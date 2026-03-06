@@ -15,6 +15,7 @@ from .display import (
     show_health_result, show_about_result,
     show_shell_result, show_network_result,
     show_http_result, show_perplexity_result,
+    show_date_result, show_calc_result, show_doc_result,
 )
 
 
@@ -26,6 +27,9 @@ SHELL_COMMANDS = {
     "network":    "network <op> <host> [args] — ping, dig, nslookup, traceroute",
     "http":       "http <url> [GET|POST|PUT|DELETE] — Requête HTTP",
     "search":     "search <query> — Recherche Perplexity AI",
+    "date":       "date <op> [date] [--tz X] — now, today, parse, add, diff, format...",
+    "calc":       "calc <expression> — Calcul math (math.sqrt, statistics.mean...)",
+    "doc":        "doc <query> [context] — Documentation technique via Perplexity",
     "quit":       "Quitter le shell",
 }
 
@@ -118,6 +122,85 @@ async def cmd_search(client, state, args="", json_output=False):
         show_error(result.get("message", "Erreur"))
 
 
+DATE_OPS = ("now", "today", "parse", "format", "add", "diff", "week_number", "day_of_week")
+
+
+async def cmd_date(client, state, args="", json_output=False):
+    parts = args.strip().split()
+    if not parts or parts[0] not in DATE_OPS:
+        show_warning("Usage: date <op> [date] [options...]")
+        show_warning("")
+        show_warning("  date now                          — date/heure actuelle (UTC)")
+        show_warning("  date now --tz Europe/Paris        — avec fuseau horaire")
+        show_warning("  date today                        — date du jour")
+        show_warning("  date parse 06/03/2026             — parser une date")
+        show_warning("  date add 2026-03-06 --days 10     — ajouter des jours")
+        show_warning("  date diff 2026-01-01 2026-03-06   — différence entre 2 dates")
+        show_warning("  date week_number 2026-03-06       — numéro de semaine")
+        show_warning("  date day_of_week 2026-03-06       — jour de la semaine")
+        return
+    op = parts[0]
+    params = {"operation": op}
+    # Parser les arguments positionnels et options
+    positional = []
+    i = 1
+    while i < len(parts):
+        if parts[i].startswith("--") and i + 1 < len(parts):
+            key = parts[i][2:]
+            val = parts[i + 1]
+            if key in ("days", "hours", "minutes"):
+                params[key] = int(val)
+            else:
+                params[key] = val
+            i += 2
+        else:
+            positional.append(parts[i])
+            i += 1
+    if positional:
+        params["date"] = positional[0]
+    if len(positional) > 1:
+        params["date2"] = positional[1]
+    result = await client.call_tool("date", params)
+    if json_output:
+        show_json(result)
+    else:
+        show_date_result(result)
+
+
+async def cmd_calc(client, state, args="", json_output=False):
+    if not args.strip():
+        show_warning("Usage: calc <expression>")
+        show_warning("")
+        show_warning("  calc 2 + 3 * 4")
+        show_warning("  calc math.sqrt(144)")
+        show_warning("  calc statistics.mean([10, 20, 30])")
+        return
+    result = await client.call_tool("calc", {"expr": args.strip()})
+    if json_output:
+        show_json(result)
+    else:
+        show_calc_result(result)
+
+
+async def cmd_doc(client, state, args="", json_output=False):
+    if not args.strip():
+        show_warning("Usage: doc <query> [context]")
+        show_warning("")
+        show_warning('  doc Python asyncio')
+        show_warning('  doc FastAPI middleware et dépendances')
+        return
+    # Le premier "mot" ou groupe entre guillemets est la query
+    # Tout le reste est le context (simplifié)
+    params = {"query": args.strip()}
+    result = await client.call_tool("perplexity_doc", params)
+    if json_output:
+        show_json(result)
+    elif result.get("status") == "success":
+        show_doc_result(result)
+    else:
+        show_error(result.get("message", "Erreur"))
+
+
 def cmd_help():
     from rich.table import Table
     table = Table(title="🐚 Commandes disponibles", show_header=True)
@@ -179,6 +262,12 @@ async def run_shell(url: str, token: str):
                 await cmd_http(client, state, args, json_output)
             elif command == "search":
                 await cmd_search(client, state, args, json_output)
+            elif command == "date":
+                await cmd_date(client, state, args, json_output)
+            elif command == "calc":
+                await cmd_calc(client, state, args, json_output)
+            elif command == "doc":
+                await cmd_doc(client, state, args, json_output)
             else:
                 show_warning(f"Commande inconnue: '{command}'. Tapez 'help'.")
 

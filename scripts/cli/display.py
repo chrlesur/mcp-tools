@@ -98,6 +98,94 @@ def show_shell_result(result: dict):
 
 
 # =============================================================================
+# Affichage outil date
+# =============================================================================
+
+def show_date_result(result: dict):
+    status = result.get("status", "?")
+    operation = result.get("operation", "?")
+
+    icon = "✅" if status == "success" else "❌"
+    console.print(f"\n{icon} [bold]date {operation}[/bold]")
+
+    if status == "error":
+        console.print(f"[red]{result.get('message', 'Erreur')}[/red]")
+        return
+
+    # Afficher les champs pertinents selon l'opération
+    fields = [
+        ("datetime", "🕐 Datetime"),
+        ("date", "📅 Date"),
+        ("result", "📋 Résultat"),
+        ("diff_days", "📏 Différence (jours)"),
+        ("diff_human", "📏 Différence"),
+        ("week_number", "📅 Semaine"),
+        ("day_number", "📅 Jour (numéro)"),
+        ("day_name_en", "📅 Jour (EN)"),
+        ("day_name_fr", "📅 Jour (FR)"),
+        ("tz", "🌍 Fuseau"),
+    ]
+    for key, label in fields:
+        if key in result:
+            console.print(f"  {label} : [cyan]{result[key]}[/cyan]")
+
+
+# =============================================================================
+# Affichage outil calc
+# =============================================================================
+
+def show_calc_result(result: dict):
+    status = result.get("status", "?")
+    expr = result.get("expr", "?")
+
+    icon = "✅" if status == "success" else "❌"
+    console.print(f"\n{icon} [bold]calc[/bold]")
+
+    if status == "error":
+        console.print(f"  Expression : [dim]{expr}[/dim]")
+        console.print(f"  [red]{result.get('message', 'Erreur')}[/red]")
+        return
+
+    r = result.get("result", "?")
+    console.print(f"  Expression : [dim]{expr}[/dim]")
+    console.print(f"  Résultat   : [bold green]{r}[/bold green]")
+    if result.get("type"):
+        console.print(f"  Type       : [dim]{result['type']}[/dim]")
+
+
+# =============================================================================
+# Affichage outil perplexity_doc
+# =============================================================================
+
+def show_doc_result(result: dict):
+    status = result.get("status", "?")
+    query = result.get("query", "?")
+    context = result.get("context", "")
+    content = result.get("content", "")
+    citations = result.get("citations", [])
+
+    icon = "✅" if status == "success" else "❌"
+    title = f"Perplexity Doc — {query}"
+    if context:
+        title += f" ({context})"
+    console.print(f"\n{icon} [bold]{title}[/bold]")
+
+    if status == "error":
+        console.print(f"[red]{result.get('message', 'Erreur')}[/red]")
+        return
+
+    if content:
+        console.print(Markdown(content))
+
+    if citations:
+        console.print(f"\n[dim]📎 {len(citations)} citations :[/dim]")
+        for i, c in enumerate(citations[:5], 1):
+            console.print(f"  [dim][{i}] {c}[/dim]")
+        if len(citations) > 5:
+            console.print(f"  [dim]... et {len(citations)-5} autres[/dim]")
+
+
+# =============================================================================
 # Affichage outil network
 # =============================================================================
 

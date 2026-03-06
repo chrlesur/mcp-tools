@@ -21,6 +21,7 @@ from .display import (
     show_health_result, show_about_result,
     show_shell_result, show_network_result,
     show_http_result, show_perplexity_result,
+    show_date_result, show_calc_result, show_doc_result,
 )
 
 
@@ -265,6 +266,125 @@ def search_cmd(ctx, query, detail, output_json):
             show_json(result)
         elif result.get("status") == "success":
             show_perplexity_result(result)
+        else:
+            show_error(result.get("message", "Erreur"))
+    asyncio.run(_run())
+
+
+# =============================================================================
+# Outil date
+# =============================================================================
+
+@cli.command("date")
+@click.argument("operation")
+@click.argument("date", default="")
+@click.option("--date2", default=None, help="Deuxième date (pour diff)")
+@click.option("--tz", default=None, help="Fuseau horaire (ex: Europe/Paris)")
+@click.option("--days", default=None, type=int, help="Jours à ajouter (pour add)")
+@click.option("--hours", default=None, type=int, help="Heures à ajouter (pour add)")
+@click.option("--minutes", default=None, type=int, help="Minutes à ajouter (pour add)")
+@click.option("--format", "fmt", default=None, help="Format strftime (pour format)")
+@click.option("--json", "-j", "output_json", is_flag=True, help="Sortie JSON brute")
+@click.pass_context
+def date_cmd(ctx, operation, date, date2, tz, days, hours, minutes, fmt, output_json):
+    """🗓️  Manipulation de dates/heures.
+
+    \b
+    Opérations : now, today, parse, format, add, diff, week_number, day_of_week
+    Exemples :
+      date now
+      date now --tz Europe/Paris
+      date today
+      date parse 06/03/2026
+      date format 2026-03-06 --format "%d/%m/%Y"
+      date add 2026-03-06 --days 10
+      date diff 2026-01-01 --date2 2026-03-06
+      date week_number 2026-03-06
+      date day_of_week 2026-03-06
+    """
+    async def _run():
+        client = MCPClient(ctx.obj["url"], ctx.obj["token"])
+        params = {"operation": operation}
+        if date:
+            params["date"] = date
+        if date2:
+            params["date2"] = date2
+        if tz:
+            params["tz"] = tz
+        if days is not None:
+            params["days"] = days
+        if hours is not None:
+            params["hours"] = hours
+        if minutes is not None:
+            params["minutes"] = minutes
+        if fmt:
+            params["format"] = fmt
+        result = await client.call_tool("date", params)
+        if output_json:
+            show_json(result)
+        else:
+            show_date_result(result)
+    asyncio.run(_run())
+
+
+# =============================================================================
+# Outil calc
+# =============================================================================
+
+@cli.command("calc")
+@click.argument("expr")
+@click.option("--json", "-j", "output_json", is_flag=True, help="Sortie JSON brute")
+@click.pass_context
+def calc_cmd(ctx, expr, output_json):
+    """🧮 Calculs mathématiques (sandbox Python Docker).
+
+    \b
+    Modules math et statistics pré-importés.
+    Exemples :
+      calc "2 + 3 * 4"
+      calc "(3 + 5) * (2 - 1)"
+      calc "math.sqrt(144)"
+      calc "statistics.mean([10, 20, 30])"
+      calc "round(math.pi, 4)"
+    """
+    async def _run():
+        client = MCPClient(ctx.obj["url"], ctx.obj["token"])
+        result = await client.call_tool("calc", {"expr": expr})
+        if output_json:
+            show_json(result)
+        else:
+            show_calc_result(result)
+    asyncio.run(_run())
+
+
+# =============================================================================
+# Outil perplexity_doc
+# =============================================================================
+
+@cli.command("doc")
+@click.argument("query")
+@click.option("--context", "-c", "ctx_str", default=None, help="Aspect spécifique à approfondir")
+@click.option("--json", "-j", "output_json", is_flag=True, help="Sortie JSON brute")
+@click.pass_context
+def doc_cmd(ctx, query, ctx_str, output_json):
+    """📚 Documentation technique via Perplexity AI.
+
+    \b
+    Exemples :
+      doc "Python asyncio"
+      doc "FastAPI" --context "middleware et dépendances"
+      doc "PostgreSQL" --context "index GIN et recherche full-text"
+    """
+    async def _run():
+        client = MCPClient(ctx.obj["url"], ctx.obj["token"])
+        params = {"query": query}
+        if ctx_str:
+            params["context"] = ctx_str
+        result = await client.call_tool("perplexity_doc", params)
+        if output_json:
+            show_json(result)
+        elif result.get("status") == "success":
+            show_doc_result(result)
         else:
             show_error(result.get("message", "Erreur"))
     asyncio.run(_run())
