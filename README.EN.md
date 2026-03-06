@@ -77,8 +77,9 @@ python scripts/mcp_cli.py shell
 # All tests (build + start + test + stop)
 python scripts/test_service.py
 
-# Specific test (shell, network, http, perplexity, auth, connectivity)
+# Specific test
 python scripts/test_service.py --test shell
+python scripts/test_service.py --test files
 
 # Server already running
 python scripts/test_service.py --no-docker
