@@ -23,7 +23,10 @@ docker compose up -d
 
 # Vérification
 curl http://localhost:8082/health
-# → {"status":"ok","service":"mcp-tools","version":"0.1.0","transport":"streamable-http"}
+# → {"status":"ok","service":"mcp-tools","version":"0.1.6","transport":"streamable-http"}
+
+# Console d'administration
+open http://localhost:8082/admin
 ```
 
 ### 3. CLI
@@ -67,6 +70,15 @@ python scripts/mcp_cli.py search "Qu'est-ce que le protocole MCP ?"
 python scripts/mcp_cli.py doc "Python asyncio"
 python scripts/mcp_cli.py doc "FastAPI" --context "middleware et dépendances"
 
+# SSH (exécution distante)
+python scripts/mcp_cli.py ssh exec myserver.com --user admin --password secret "uptime"
+python scripts/mcp_cli.py ssh status myserver.com --user admin --password secret
+
+# Fichiers S3
+python scripts/mcp_cli.py files list --prefix logs/
+python scripts/mcp_cli.py files read config/app.yaml
+python scripts/mcp_cli.py files write test.txt --content "Hello World"
+
 # Gestion des tokens (admin)
 python scripts/mcp_cli.py token create agent-prod --tools shell,date,calc --expires 90
 python scripts/mcp_cli.py token list
@@ -83,10 +95,16 @@ python scripts/mcp_cli.py shell
 # Tous les tests (build + start + test + stop)
 python scripts/test_service.py
 
-# Test spécifique
+# Test spécifique (13 catégories)
 python scripts/test_service.py --test shell
+python scripts/test_service.py --test network
+python scripts/test_service.py --test http
+python scripts/test_service.py --test ssh
 python scripts/test_service.py --test files
 python scripts/test_service.py --test token
+python scripts/test_service.py --test admin
+python scripts/test_service.py --test date
+python scripts/test_service.py --test calc
 
 # Serveur déjà lancé
 python scripts/test_service.py --no-docker
@@ -159,6 +177,8 @@ Authentification admin requise (ADMIN_BOOTSTRAP_KEY ou token S3 avec permission 
 - **Auth Bearer token** : Chaque requête /mcp est authentifiée
 - **`tool_ids`** : Le token peut restreindre l'accès à un sous-ensemble d'outils
 - **Sandbox Docker** : Chaque commande shell/network/http dans un conteneur éphémère isolé (--cap-drop=ALL, --read-only, non-root)
+- **Token Manager S3** : Tokens stockés en S3 Dell ECS (`_tokens/{sha256}.json`), cache mémoire TTL 5min, isolation par `tool_ids`
+- **Admin same-origin** : Console `/admin` sans CORS cross-origin, auth admin obligatoire sur l'API
 - **Anti-SSRF** : Résolution DNS + blocage RFC 1918 / loopback / metadata cloud pour les tools `http` et `network`
 - **Utilisateur non-root** dans Docker
 - **Timeouts et limites** sur tous les outils

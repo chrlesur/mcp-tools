@@ -23,7 +23,10 @@ docker compose up -d
 
 # Verify
 curl http://localhost:8082/health
-# → {"status":"ok","service":"mcp-tools","version":"0.1.0","transport":"streamable-http"}
+# → {"status":"ok","service":"mcp-tools","version":"0.1.6","transport":"streamable-http"}
+
+# Admin console
+open http://localhost:8082/admin
 ```
 
 ### 3. CLI
@@ -67,6 +70,15 @@ python scripts/mcp_cli.py search "What is the MCP protocol?"
 python scripts/mcp_cli.py doc "Python asyncio"
 python scripts/mcp_cli.py doc "FastAPI" --context "middleware and dependencies"
 
+# SSH (remote execution)
+python scripts/mcp_cli.py ssh exec myserver.com --user admin --password secret "uptime"
+python scripts/mcp_cli.py ssh status myserver.com --user admin --password secret
+
+# S3 Files
+python scripts/mcp_cli.py files list --prefix logs/
+python scripts/mcp_cli.py files read config/app.yaml
+python scripts/mcp_cli.py files write test.txt --content "Hello World"
+
 # Token management (admin)
 python scripts/mcp_cli.py token create agent-prod --tools shell,date,calc --expires 90
 python scripts/mcp_cli.py token list
@@ -83,10 +95,16 @@ python scripts/mcp_cli.py shell
 # All tests (build + start + test + stop)
 python scripts/test_service.py
 
-# Specific test
+# Specific test (13 categories)
 python scripts/test_service.py --test shell
+python scripts/test_service.py --test network
+python scripts/test_service.py --test http
+python scripts/test_service.py --test ssh
 python scripts/test_service.py --test files
 python scripts/test_service.py --test token
+python scripts/test_service.py --test admin
+python scripts/test_service.py --test date
+python scripts/test_service.py --test calc
 
 # Server already running
 python scripts/test_service.py --no-docker
@@ -159,6 +177,8 @@ Admin authentication required (ADMIN_BOOTSTRAP_KEY or S3 token with admin permis
 - **Bearer token auth**: Every /mcp request is authenticated
 - **`tool_ids`**: Token can restrict access to a subset of tools
 - **Docker sandbox**: Each shell/network/http command runs in an ephemeral isolated container (--cap-drop=ALL, --read-only, non-root)
+- **S3 Token Manager**: Tokens stored in S3 Dell ECS (`_tokens/{sha256}.json`), in-memory cache TTL 5min, `tool_ids` isolation
+- **Admin same-origin**: `/admin` console with no cross-origin CORS, admin auth required on API
 - **Anti-SSRF**: DNS resolution + RFC 1918 / loopback / cloud metadata blocking for `http` and `network` tools
 - **Non-root user** in Docker
 - **Timeouts and limits** on all tools
