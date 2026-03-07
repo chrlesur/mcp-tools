@@ -32,7 +32,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Docker CLI (binaire statique) — nécessaire pour lancer les sandbox éphémères
 ARG DOCKER_VERSION=27.4.1
 RUN ARCH=$(dpkg --print-architecture) && \
-    if [ "$ARCH" = "arm64" ]; then ARCH="aarch64"; fi && \
+    if [ "$ARCH" = "arm64" ]; then ARCH="aarch64"; \
+    elif [ "$ARCH" = "amd64" ]; then ARCH="x86_64"; fi && \
     curl -fsSL "https://download.docker.com/linux/static/stable/${ARCH}/docker-${DOCKER_VERSION}.tgz" \
     | tar xz -C /tmp && mv /tmp/docker/docker /usr/local/bin/docker && rm -rf /tmp/docker
 
