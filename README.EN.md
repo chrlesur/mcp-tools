@@ -200,6 +200,7 @@ Admin authentication required (ADMIN_BOOTSTRAP_KEY or S3 token with admin permis
 | `S3_BUCKET_NAME`       | S3 bucket                       | `mcp-tools`                |
 | `PERPLEXITY_API_KEY`   | Perplexity API key              |                            |
 | `PERPLEXITY_MODEL`     | Perplexity model                | `sonar-reasoning-pro`      |
+| `SANDBOX_DNS`          | DNS for network sandboxes        | `8.8.8.8,8.8.4.4`         |
 
 ### CLI Client
 
