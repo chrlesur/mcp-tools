@@ -45,7 +45,7 @@ async def cmd_health(client: MCPClient, state: dict, args: str = "",
     result = await client.call_tool("system_health", {})
     if json_output:
         show_json(result)
-    elif result.get("status") == "ok":
+    elif result.get("status") in ("ok", "healthy"):
         show_health_result(result)
     else:
         show_error(result.get("message", "Erreur"))

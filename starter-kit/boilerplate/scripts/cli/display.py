@@ -51,7 +51,7 @@ def show_health_result(result: dict):
     service_name = result.get("service_name", "?")
     services = result.get("services", {})
 
-    icon = "✅" if status == "ok" else "❌"
+    icon = "✅" if status in ("ok", "healthy") else "❌"
     color = "green" if status == "ok" else "red"
 
     table = Table(title=f"{icon} {service_name} — Health Check", show_header=True)

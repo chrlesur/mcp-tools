@@ -178,7 +178,7 @@ class HealthCheckMiddleware:
             if version_file.exists():
                 version = version_file.read_text().strip()
             body = json.dumps({
-                "status": "ok",
+                "status": "healthy",
                 "service": settings.mcp_server_name,
                 "version": version,
                 "transport": "streamable-http",

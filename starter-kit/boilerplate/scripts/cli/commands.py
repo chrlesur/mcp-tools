@@ -57,7 +57,7 @@ def health_cmd(ctx, output_json):
             result = await client.call_tool("system_health", {})
             if output_json:
                 show_json(result)
-            elif result.get("status") == "ok":
+            elif result.get("status") in ("ok", "healthy"):
                 show_health_result(result)
             else:
                 show_error(result.get("message", "Service indisponible"))

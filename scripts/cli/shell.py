@@ -43,7 +43,7 @@ async def cmd_health(client, state, args="", json_output=False):
     result = await client.call_rest("GET", "/health")
     if json_output:
         show_json(result)
-    elif result.get("status") == "ok":
+    elif result.get("status") in ("ok", "healthy"):
         show_health_result(result)
     else:
         show_error(result.get("message", "Erreur"))

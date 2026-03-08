@@ -38,13 +38,13 @@ def show_health_result(result: dict):
     status = result.get("status", "?")
     name = result.get("service_name") or result.get("service", "?")
     version = result.get("version", "")
-    icon = "✅" if status == "ok" else "❌"
+    icon = "✅" if status in ("ok", "healthy") else "❌"
     info = f"{icon} [bold]{name}[/bold] — Status: [green]{status}[/green]"
     if version:
         info += f" — v{version}"
     console.print(Panel.fit(
         info,
-        border_style="green" if status == "ok" else "red",
+        border_style="green" if status in ("ok", "healthy") else "red",
     ))
 
 
