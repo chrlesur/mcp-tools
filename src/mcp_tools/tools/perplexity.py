@@ -4,7 +4,8 @@ Outil: perplexity — Recherche internet via Perplexity AI.
 """
 
 import httpx
-from typing import Optional
+from typing import Annotated, Optional
+from pydantic import Field
 from mcp.server.fastmcp import FastMCP, Context
 from ..auth.context import check_tool_access
 from ..config import get_settings
@@ -13,9 +14,9 @@ from ..config import get_settings
 def register(mcp: FastMCP) -> None:
     @mcp.tool()
     async def perplexity_search(
-        query: str,
-        detail_level: str = "normal",
-        model: Optional[str] = None,
+        query: Annotated[str, Field(description="La question ou requête de recherche à envoyer à Perplexity AI")],
+        detail_level: Annotated[str, Field(default="normal", description="Niveau de détail : brief (2-3 phrases), normal (réponse complète), detailed (exploration en profondeur)")] = "normal",
+        model: Annotated[Optional[str], Field(default=None, description="Modèle Perplexity à utiliser (optionnel, défaut selon config serveur)")] = None,
         ctx: Optional[Context] = None
     ) -> dict:
         """Recherche internet via Perplexity AI. Niveaux : brief, normal, detailed. Retourne du Markdown avec citations."""
@@ -78,9 +79,9 @@ def register(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def perplexity_doc(
-        query: str,
-        context: Optional[str] = None,
-        model: Optional[str] = None,
+        query: Annotated[str, Field(description="Technologie, librairie ou API à documenter (ex: 'FastAPI', 'boto3 S3', 'React hooks')")],
+        context: Annotated[Optional[str], Field(default=None, description="Contexte spécifique à approfondir (ex: 'authentification JWT', 'gestion des erreurs')")] = None,
+        model: Annotated[Optional[str], Field(default=None, description="Modèle Perplexity à utiliser (optionnel, défaut selon config serveur)")] = None,
         ctx: Optional[Context] = None
     ) -> dict:
         """Documentation technique d'une technologie, librairie ou API. Retourne syntaxe, exemples de code et bonnes pratiques."""

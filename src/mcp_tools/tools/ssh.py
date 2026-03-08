@@ -28,8 +28,9 @@ import asyncio
 import re
 import shlex
 import uuid
-from typing import Optional
+from typing import Annotated, Optional
 
+from pydantic import Field
 from mcp.server.fastmcp import FastMCP, Context
 from ..auth.context import check_tool_access
 from ..config import get_settings
@@ -448,18 +449,18 @@ async def _run_local(
 def register(mcp: FastMCP) -> None:
     @mcp.tool()
     async def ssh(
-        host: str,
-        username: str,
-        operation: str = "exec",
-        auth_type: str = "password",
-        password: Optional[str] = None,
-        private_key: Optional[str] = None,
-        command: Optional[str] = None,
-        sudo: bool = False,
-        port: int = 22,
-        remote_path: Optional[str] = None,
-        content: Optional[str] = None,
-        timeout: int = 30,
+        host: Annotated[str, Field(description="Hostname ou IP du serveur SSH cible")],
+        username: Annotated[str, Field(description="Nom d'utilisateur SSH pour la connexion")],
+        operation: Annotated[str, Field(default="exec", description="Opération : exec (commande), status (test connexion), upload (envoyer fichier), download (récupérer fichier)")] = "exec",
+        auth_type: Annotated[str, Field(default="password", description="Type d'authentification : password ou key (clé privée)")] = "password",
+        password: Annotated[Optional[str], Field(default=None, description="Mot de passe SSH (requis si auth_type=password)")] = None,
+        private_key: Annotated[Optional[str], Field(default=None, description="Clé privée SSH en texte (requis si auth_type=key)")] = None,
+        command: Annotated[Optional[str], Field(default=None, description="Commande à exécuter sur le serveur distant (requis pour exec)")] = None,
+        sudo: Annotated[bool, Field(default=False, description="Exécuter la commande avec sudo")] = False,
+        port: Annotated[int, Field(default=22, description="Port SSH (1-65535, défaut 22)")] = 22,
+        remote_path: Annotated[Optional[str], Field(default=None, description="Chemin du fichier distant (requis pour upload/download)")] = None,
+        content: Annotated[Optional[str], Field(default=None, description="Contenu du fichier à uploader (requis pour upload, max 1 MB)")] = None,
+        timeout: Annotated[int, Field(default=30, description="Timeout en secondes (max 60)")] = 30,
         ctx: Optional[Context] = None,
     ) -> dict:
         """Exécute des commandes ou transfère des fichiers via SSH dans un conteneur sandbox isolé. Opérations : exec, status, upload, download. Auth : password ou key (clé privée)."""

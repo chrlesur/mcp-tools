@@ -17,7 +17,8 @@ import asyncio
 import ipaddress
 import re
 import uuid
-from typing import Optional
+from typing import Annotated, Optional
+from pydantic import Field
 from mcp.server.fastmcp import FastMCP, Context
 from ..auth.context import check_tool_access
 from ..config import get_settings
@@ -225,11 +226,11 @@ ALLOWED_OPERATIONS = ("ping", "traceroute", "nslookup", "dig")
 def register(mcp: FastMCP) -> None:
     @mcp.tool()
     async def network(
-        host: str,
-        operation: str = "ping",
-        extra_args: str = "",
-        count: int = 4,
-        timeout: int = 15,
+        host: Annotated[str, Field(description="Hostname ou IP publique cible (ex: google.com, 8.8.8.8)")],
+        operation: Annotated[str, Field(default="ping", description="Opération réseau : ping, traceroute, nslookup ou dig")] = "ping",
+        extra_args: Annotated[str, Field(default="", description="Arguments supplémentaires (ex: '-c 2' pour ping, '-type=mx' pour nslookup, 'MX +short' pour dig)")] = "",
+        count: Annotated[int, Field(default=4, description="Nombre de pings (1-10, utilisé seulement si extra_args est vide)")] = 4,
+        timeout: Annotated[int, Field(default=15, description="Timeout en secondes (max 30)")] = 15,
         ctx: Optional[Context] = None,
     ) -> dict:
         """Diagnostic réseau dans un conteneur sandbox isolé. Opérations : ping, traceroute, nslookup, dig. Passez des arguments via extra_args (ex: '-c 2' pour ping, '-type=mx' pour nslookup, 'MX +short' pour dig). IPs privées RFC 1918 interdites."""

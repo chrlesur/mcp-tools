@@ -144,6 +144,8 @@ AdminMiddleware → HealthCheckMiddleware → AuthMiddleware → LoggingMiddlewa
 
 ### Outils disponibles (12/27 — Phase 1)
 
+> **Tous les paramètres** de chaque outil sont documentés avec des descriptions détaillées via le protocole MCP. Les clients compatibles (Cline, Claude Desktop…) affichent automatiquement ces descriptions.
+
 | Outil              | Description                                          |
 | ------------------ | ---------------------------------------------------- |
 | `shell`            | Sandbox Docker isolée (bash, sh, python3, node, openssl) — sans réseau |

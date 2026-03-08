@@ -26,8 +26,9 @@ Sécurité :
 import asyncio
 import json
 import uuid
-from typing import Optional
+from typing import Annotated, Optional
 
+from pydantic import Field
 from mcp.server.fastmcp import FastMCP, Context
 from ..auth.context import check_tool_access
 from ..config import get_settings
@@ -436,19 +437,19 @@ async def _run_local(script: str, timeout: int, settings) -> dict:
 def register(mcp: FastMCP) -> None:
     @mcp.tool()
     async def files(
-        operation: str,
-        path: Optional[str] = None,
-        content: Optional[str] = None,
-        path2: Optional[str] = None,
-        prefix: Optional[str] = None,
-        version_id: Optional[str] = None,
-        max_keys: int = 100,
-        endpoint: Optional[str] = None,
-        access_key: Optional[str] = None,
-        secret_key: Optional[str] = None,
-        bucket: Optional[str] = None,
-        region: Optional[str] = None,
-        timeout: int = 30,
+        operation: Annotated[str, Field(description="Opération S3 : list, read, write, delete, info, diff, versions ou enable_versioning")],
+        path: Annotated[Optional[str], Field(default=None, description="Chemin (clé) de l'objet S3 (requis pour read, write, delete, info, diff)")] = None,
+        content: Annotated[Optional[str], Field(default=None, description="Contenu à écrire dans l'objet S3 (requis pour write, max 5 MB)")] = None,
+        path2: Annotated[Optional[str], Field(default=None, description="Second chemin S3 pour l'opération diff")] = None,
+        prefix: Annotated[Optional[str], Field(default=None, description="Préfixe pour filtrer le listing d'objets (opération list)")] = None,
+        version_id: Annotated[Optional[str], Field(default=None, description="ID de version S3 pour lire une version spécifique")] = None,
+        max_keys: Annotated[int, Field(default=100, description="Nombre max d'objets retournés par list (1-1000)")] = 100,
+        endpoint: Annotated[Optional[str], Field(default=None, description="URL endpoint S3 (optionnel, défaut depuis config serveur)")] = None,
+        access_key: Annotated[Optional[str], Field(default=None, description="Access key S3 (optionnel, défaut depuis config serveur)")] = None,
+        secret_key: Annotated[Optional[str], Field(default=None, description="Secret key S3 (optionnel, défaut depuis config serveur)")] = None,
+        bucket: Annotated[Optional[str], Field(default=None, description="Nom du bucket S3 (optionnel, défaut depuis config serveur)")] = None,
+        region: Annotated[Optional[str], Field(default=None, description="Région S3 (optionnel, défaut depuis config serveur)")] = None,
+        timeout: Annotated[int, Field(default=30, description="Timeout en secondes (max 60)")] = 30,
         ctx: Optional[Context] = None,
     ) -> dict:
         """Opérations fichiers sur S3 Dell ECS dans un conteneur sandbox isolé. Opérations : list, read, write, delete, info, diff, versions. Versioning S3 supporté via version_id. Config hybride SigV2/SigV4 pour Dell ECS Cloud Temple."""

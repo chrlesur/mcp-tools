@@ -5,7 +5,8 @@ Outil: date — Manipulation de dates et heures.
 
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
-from typing import Optional
+from typing import Annotated, Optional
+from pydantic import Field
 from mcp.server.fastmcp import FastMCP, Context
 from ..auth.context import check_tool_access
 
@@ -69,14 +70,14 @@ def register(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def date(
-        operation: str,
-        date: Optional[str] = None,
-        date2: Optional[str] = None,
-        days: Optional[float] = None,
-        hours: Optional[float] = None,
-        minutes: Optional[float] = None,
-        format: Optional[str] = None,
-        tz: Optional[str] = None,
+        operation: Annotated[str, Field(description="Opération : now, today, diff, add, format, parse, week_number ou day_of_week")],
+        date: Annotated[Optional[str], Field(default=None, description="Date d'entrée en ISO 8601 ou format courant (ex: '2026-03-06', '06/03/2026')")] = None,
+        date2: Annotated[Optional[str], Field(default=None, description="Seconde date pour l'opération diff")] = None,
+        days: Annotated[Optional[float], Field(default=None, description="Nombre de jours à ajouter (opération add)")] = None,
+        hours: Annotated[Optional[float], Field(default=None, description="Nombre d'heures à ajouter (opération add)")] = None,
+        minutes: Annotated[Optional[float], Field(default=None, description="Nombre de minutes à ajouter (opération add)")] = None,
+        format: Annotated[Optional[str], Field(default=None, description="Format strftime pour l'opération format (ex: '%d/%m/%Y %H:%M')")] = None,
+        tz: Annotated[Optional[str], Field(default=None, description="Fuseau horaire IANA (ex: 'Europe/Paris', 'America/New_York', défaut: UTC)")] = None,
         ctx: Optional[Context] = None,
     ) -> dict:
         """Manipulation de dates : now, today, diff, add, format, parse, week_number, day_of_week. Dates en ISO 8601."""

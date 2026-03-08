@@ -24,9 +24,10 @@ import re
 import shlex
 import socket
 import uuid
-from typing import Any, Dict, Optional
+from typing import Annotated, Any, Dict, Optional
 from urllib.parse import urlparse
 
+from pydantic import Field
 from mcp.server.fastmcp import FastMCP, Context
 from ..auth.context import check_tool_access
 from ..config import get_settings
@@ -438,15 +439,15 @@ async def _run_local(
 def register(mcp: FastMCP) -> None:
     @mcp.tool()
     async def http(
-        url: str,
-        method: str = "GET",
-        headers: Optional[Dict[str, str]] = None,
-        body: Optional[str] = None,
-        json_body: Optional[Dict[str, Any]] = None,
-        auth_type: Optional[str] = None,
-        auth_value: Optional[str] = None,
-        timeout: int = 30,
-        verify_ssl: bool = True,
+        url: Annotated[str, Field(description="URL cible (http:// ou https://). Les IPs privées RFC 1918 sont bloquées (anti-SSRF)")],
+        method: Annotated[str, Field(default="GET", description="Méthode HTTP : GET, POST, PUT, DELETE, PATCH ou HEAD")] = "GET",
+        headers: Annotated[Optional[Dict[str, str]], Field(default=None, description="Headers HTTP additionnels (objet clé/valeur)")] = None,
+        body: Annotated[Optional[str], Field(default=None, description="Corps de la requête en texte brut")] = None,
+        json_body: Annotated[Optional[Dict[str, Any]], Field(default=None, description="Corps de la requête en JSON (prioritaire sur body)")] = None,
+        auth_type: Annotated[Optional[str], Field(default=None, description="Type d'authentification : basic, bearer ou api_key")] = None,
+        auth_value: Annotated[Optional[str], Field(default=None, description="Valeur d'authentification (ex: 'user:pass' pour basic, token pour bearer)")] = None,
+        timeout: Annotated[int, Field(default=30, description="Timeout en secondes (max selon config serveur)")] = 30,
+        verify_ssl: Annotated[bool, Field(default=True, description="Vérifier le certificat SSL (false pour les certificats auto-signés)")] = True,
         ctx: Optional[Context] = None,
     ) -> dict:
         """Client HTTP/REST dans un conteneur sandbox isolé (anti-SSRF, IPs privées bloquées). Méthodes : GET, POST, PUT, DELETE, PATCH, HEAD. Auth : basic, bearer, api_key."""

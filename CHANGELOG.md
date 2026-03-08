@@ -9,6 +9,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Fixed
 - **Bug critique `tool_ids` vide** — Un token créé sans `tool_ids` (accès à tous les outils attendu) voyait TOUS ses accès refusés. La condition `if not tool_ids or ...` dans `check_tool_access()` bloquait quand la liste était vide. Corrigé en `if tool_ids and ...` → liste vide = accès total (convention Cloud Temple §3 ARCHITECTURE.md)
 
+### Improved
+- **Descriptions des paramètres MCP** — Ajout de `Annotated[type, Field(description="...")]` sur les **63 paramètres** des 13 tools MCP (9 fichiers). Les clients MCP (Cline, Claude Desktop, etc.) affichent désormais une description utile pour chaque paramètre au lieu de "No description". Chaque description est concise et adaptée pour un usage par LLM (valeurs possibles, exemples, contraintes)
+
 ### Added
 - **Guide Cline/VSCodium** (`starter-kit/CLINE_SETUP.md`) — Guide complet pour configurer un serveur MCP dans Cline : chemins par OS (macOS/Linux/Windows, VS Code et VSCodium), config minimale, bootstrap key, token S3, multi-serveurs, debug (point rouge/orange), serveur distant, SSE vs Streamable HTTP
 - **Section Cline dans README.md** — Configuration rapide avec exemple JSON et commande de création de token dédié

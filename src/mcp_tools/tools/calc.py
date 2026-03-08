@@ -6,7 +6,8 @@ Outil: calc — Calculs mathématiques dans une sandbox Python isolée.
 import uuid
 import asyncio
 import shutil
-from typing import Optional
+from typing import Annotated, Optional
+from pydantic import Field
 from mcp.server.fastmcp import FastMCP, Context
 from ..auth.context import check_tool_access
 from ..config import get_settings
@@ -28,7 +29,7 @@ def register(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def calc(
-        expr: str,
+        expr: Annotated[str, Field(description="Expression mathématique Python à évaluer (ex: '(3+5)*2', 'math.sqrt(144)', 'statistics.mean([10,20,30])')")],
         ctx: Optional[Context] = None,
     ) -> dict:
         """Calcule une expression mathématique Python dans une sandbox isolée. Modules math et statistics pré-importés. Ex: '(3+5)*2', 'math.sqrt(144)', 'statistics.mean([10,20,30])'."""

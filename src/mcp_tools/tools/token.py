@@ -19,8 +19,9 @@ Stockage :
   - SHA-256 hash du token comme clé S3 (token brut jamais persisté)
 """
 
-from typing import Optional, List
+from typing import Annotated, Optional, List
 
+from pydantic import Field
 from mcp.server.fastmcp import FastMCP, Context
 from ..auth.context import check_tool_access, current_token_info
 
@@ -31,11 +32,11 @@ ALLOWED_OPERATIONS = ("create", "list", "info", "revoke")
 def register(mcp: FastMCP) -> None:
     @mcp.tool()
     async def token(
-        operation: str,
-        client_name: Optional[str] = None,
-        permissions: Optional[List[str]] = None,
-        tool_ids: Optional[List[str]] = None,
-        expires_days: int = 90,
+        operation: Annotated[str, Field(description="Opération : create (nouveau token), list (tous les tokens), info (détails), revoke (supprimer)")],
+        client_name: Annotated[Optional[str], Field(default=None, description="Nom du client associé au token (requis pour create, info, revoke)")] = None,
+        permissions: Annotated[Optional[List[str]], Field(default=None, description="Permissions du token (ex: ['read', 'write', 'admin']). Défaut: ['read', 'write']")] = None,
+        tool_ids: Annotated[Optional[List[str]], Field(default=None, description="Liste des IDs d'outils autorisés (ex: ['shell', 'http', 'calc']). Vide = tous les outils")] = None,
+        expires_days: Annotated[int, Field(default=90, description="Durée de validité en jours (0 = jamais d'expiration)")] = 90,
         ctx: Optional[Context] = None,
     ) -> dict:
         """Gestion des tokens d'authentification MCP (admin uniquement). Opérations : create, list, info, revoke. Chaque token restreint l'accès aux outils via tool_ids."""

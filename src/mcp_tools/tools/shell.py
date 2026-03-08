@@ -12,7 +12,8 @@ Fallback : si SANDBOX_ENABLED=false (dev local), exécution locale via subproces
 import asyncio
 import sys
 import uuid
-from typing import Optional
+from typing import Annotated, Optional
+from pydantic import Field
 from mcp.server.fastmcp import FastMCP, Context
 from ..auth.context import check_tool_access
 from ..config import get_settings
@@ -140,10 +141,10 @@ async def _run_local(command: str, shell: str, cwd: Optional[str], timeout: int,
 def register(mcp: FastMCP) -> None:
     @mcp.tool()
     async def shell(
-        command: str,
-        shell: str = "bash",
-        cwd: Optional[str] = None,
-        timeout: int = 30,
+        command: Annotated[str, Field(description="La commande à exécuter dans le conteneur sandbox")],
+        shell: Annotated[str, Field(default="bash", description="Shell à utiliser : bash, sh, python3 ou node")] = "bash",
+        cwd: Annotated[Optional[str], Field(default=None, description="Répertoire de travail (ignoré en mode sandbox)")] = None,
+        timeout: Annotated[int, Field(default=30, description="Timeout en secondes (max selon config serveur)")] = 30,
         ctx: Optional[Context] = None,
     ) -> dict:
         """Exécute une commande dans un conteneur sandbox isolé (sans réseau, mémoire limitée, non-root). Shells disponibles : bash, sh, python3, node."""

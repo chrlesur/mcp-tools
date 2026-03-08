@@ -23,7 +23,7 @@ docker compose up -d
 
 # Verify
 curl http://localhost:8082/health
-# → {"status":"ok","service":"mcp-tools","version":"0.1.6","transport":"streamable-http"}
+# → {"status":"ok","service":"mcp-tools","version":"0.1.7","transport":"streamable-http"}
 
 # Admin console
 open http://localhost:8082/admin
@@ -143,6 +143,8 @@ AdminMiddleware → HealthCheckMiddleware → AuthMiddleware → LoggingMiddlewa
 | Display          | `scripts/cli/display.py`     | Shared Rich output (2+3)  |
 
 ### Available Tools (12/27 — Phase 1)
+
+> **All parameters** for each tool are documented with detailed descriptions via the MCP protocol. Compatible clients (Cline, Claude Desktop…) automatically display these descriptions.
 
 | Tool               | Description                                          |
 | ------------------ | ---------------------------------------------------- |
