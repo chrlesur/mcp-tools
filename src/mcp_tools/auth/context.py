@@ -31,7 +31,7 @@ def check_tool_access(tool_name: str) -> None:
     # Vérifie si l'outil est dans la liste autorisée
     tool_ids = token_info.get("tool_ids", [])
     
-    # Si tool_ids est vide, par défaut pour le moment on refuse l'accès, 
-    # ou on peut décider que vide = aucun outil (contrairement à admin qui passe au-dessus).
-    if not tool_ids or tool_name not in tool_ids:
+    # Si tool_ids est vide ou absent → accès à TOUS les outils (convention Cloud Temple)
+    # Seuls les tokens avec une liste tool_ids explicite sont restreints.
+    if tool_ids and tool_name not in tool_ids:
         raise ValueError(f"Accès refusé à l'outil '{tool_name}' (non présent dans tool_ids)")

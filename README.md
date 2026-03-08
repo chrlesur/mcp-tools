@@ -23,7 +23,7 @@ docker compose up -d
 
 # Vérification
 curl http://localhost:8082/health
-# → {"status":"ok","service":"mcp-tools","version":"0.1.6","transport":"streamable-http"}
+# → {"status":"ok","service":"mcp-tools","version":"0.1.7","transport":"streamable-http"}
 
 # Console d'administration
 open http://localhost:8082/admin
@@ -232,6 +232,38 @@ mcp-tools/
 ├── .env.example
 └── VERSION
 ```
+
+## Configurer dans Cline (VS Code / VSCodium)
+
+Pour connecter MCP Tools à **Cline**, ajoutez dans votre `cline_mcp_settings.json`
+(accessible via ⚙️ MCP Servers dans la sidebar Cline) :
+
+```json
+{
+  "mcpServers": {
+    "mcp-tools": {
+      "url": "http://localhost:8082/mcp",
+      "headers": {
+        "Authorization": "Bearer VOTRE_TOKEN_ICI"
+      }
+    }
+  }
+}
+```
+
+| Paramètre | Valeur | Description |
+|-----------|--------|-------------|
+| `url` | `http://localhost:8082/mcp` | Endpoint Streamable HTTP (via WAF, **toujours `/mcp`**) |
+| `Authorization` | `Bearer VOTRE_TOKEN` | Bootstrap key ou token S3 |
+
+Pour créer un token dédié à Cline avec des outils spécifiques :
+
+```bash
+python scripts/mcp_cli.py --token $ADMIN_BOOTSTRAP_KEY \
+  token create cline-dev --tools shell,http,network,date,calc,perplexity_search --expires 365
+```
+
+> **Guide complet** : voir [`starter-kit/CLINE_SETUP.md`](starter-kit/CLINE_SETUP.md) pour les chemins des fichiers de configuration par OS, le multi-serveurs, le debug, etc.
 
 ## Roadmap
 

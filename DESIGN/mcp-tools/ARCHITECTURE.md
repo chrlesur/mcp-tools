@@ -1,6 +1,6 @@
 # Architecture — MCP Tools
 
-> **Version** : 0.1.6 | **Date** : 2026-03-07 | **Auteur** : Cloud Temple
+> **Version** : 0.1.7 | **Date** : 2026-03-08 | **Auteur** : Cloud Temple
 > **Projet** : mcp-tools | **Licence** : Apache 2.0
 > **Statut** : 🚧 Implémentation en cours — 12/27 tools validés (shell, network, http, ssh, files, token, perplexity_search, perplexity_doc, date, calc, system_health, system_about) + Token Manager S3 + Console Admin Web
 

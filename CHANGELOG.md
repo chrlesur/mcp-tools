@@ -4,6 +4,27 @@ All notable changes to MCP Tools will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.1.7] — 2026-03-08
+
+### Fixed
+- **Bug critique `tool_ids` vide** — Un token créé sans `tool_ids` (accès à tous les outils attendu) voyait TOUS ses accès refusés. La condition `if not tool_ids or ...` dans `check_tool_access()` bloquait quand la liste était vide. Corrigé en `if tool_ids and ...` → liste vide = accès total (convention Cloud Temple §3 ARCHITECTURE.md)
+
+### Added
+- **Guide Cline/VSCodium** (`starter-kit/CLINE_SETUP.md`) — Guide complet pour configurer un serveur MCP dans Cline : chemins par OS (macOS/Linux/Windows, VS Code et VSCodium), config minimale, bootstrap key, token S3, multi-serveurs, debug (point rouge/orange), serveur distant, SSE vs Streamable HTTP
+- **Section Cline dans README.md** — Configuration rapide avec exemple JSON et commande de création de token dédié
+
+### Changed
+- **Starter-kit entièrement mis à jour** — Boilerplate aligné sur les innovations mcp-tools v0.1.6 :
+  - `server.py` : `mcp.streamable_http_app()` (remplace `mcp.sse_app()`), pile 5 middlewares ASGI, bannière dynamique `_build_banner()`, `HealthCheckMiddleware`
+  - `client.py` : SDK MCP `streamablehttp_client` (remplace `httpx-sse`)
+  - Nouveau : `admin/middleware.py` + `admin/api.py` + `static/admin.html` (console admin web SPA)
+  - Nouveau : `auth/token_store.py` (Token Store S3 + cache TTL 5min)
+  - Nouveau : `__main__.py` (`python -m mon_service`)
+  - `auth/middleware.py` : supprimé `HostNormalizerMiddleware`, ajout ring buffer 200 entrées
+  - `waf/Caddyfile` : `/sse` → `/mcp`, port 8082
+  - `docker-compose.yml` : `expose` au lieu de `ports`, WAF port 8082
+- **DESIGN/mcp-vault/ARCHITECTURE.md** v0.2.1-draft — Aligné avec innovations mcp-tools : pile 5 middleware ASGI, console admin web, WAF dans docker-compose, ContextVar, Token Store cache TTL, ring buffer, sécurité enrichie (9 couches)
+
 ## [0.1.6] — 2026-03-07
 
 ### Added
