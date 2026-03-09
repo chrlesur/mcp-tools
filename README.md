@@ -244,6 +244,9 @@ Pour connecter MCP Tools à **Cline**, ajoutez dans votre `cline_mcp_settings.js
 {
   "mcpServers": {
     "mcp-tools": {
+      "disabled": false,
+      "timeout": 60,
+      "type": "streamableHttp",
       "url": "http://localhost:8082/mcp",
       "headers": {
         "Authorization": "Bearer VOTRE_TOKEN_ICI"
@@ -255,8 +258,11 @@ Pour connecter MCP Tools à **Cline**, ajoutez dans votre `cline_mcp_settings.js
 
 | Paramètre | Valeur | Description |
 |-----------|--------|-------------|
+| `type` | `streamableHttp` | **Obligatoire** — indique à Cline le transport MCP à utiliser |
 | `url` | `http://localhost:8082/mcp` | Endpoint Streamable HTTP (via WAF, **toujours `/mcp`**) |
+| `timeout` | `60` | Timeout en secondes (recommandé pour les outils longs) |
 | `Authorization` | `Bearer VOTRE_TOKEN` | Bootstrap key ou token S3 |
+| `disabled` | `false` | Permet de désactiver le serveur sans supprimer la config |
 
 Pour créer un token dédié à Cline avec des outils spécifiques :
 

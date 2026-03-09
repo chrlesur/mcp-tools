@@ -211,6 +211,44 @@ Admin authentication required (ADMIN_BOOTSTRAP_KEY or S3 token with admin permis
 | `MCP_URL`   | Server URL         | `http://localhost:8082`   |
 | `MCP_TOKEN` | Auth token         | (empty)                   |
 
+## Configure in Cline (VS Code / VSCodium)
+
+To connect MCP Tools to **Cline**, add the following to your `cline_mcp_settings.json`
+(accessible via ⚙️ MCP Servers in the Cline sidebar):
+
+```json
+{
+  "mcpServers": {
+    "mcp-tools": {
+      "disabled": false,
+      "timeout": 60,
+      "type": "streamableHttp",
+      "url": "http://localhost:8082/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_TOKEN_HERE"
+      }
+    }
+  }
+}
+```
+
+| Parameter | Value | Description |
+|-----------|-------|-------------|
+| `type` | `streamableHttp` | **Required** — tells Cline which MCP transport to use |
+| `url` | `http://localhost:8082/mcp` | Streamable HTTP endpoint (via WAF, **always `/mcp`**) |
+| `timeout` | `60` | Timeout in seconds (recommended for long-running tools) |
+| `Authorization` | `Bearer YOUR_TOKEN` | Bootstrap key or S3 token |
+| `disabled` | `false` | Allows disabling the server without removing the config |
+
+To create a dedicated token for Cline with specific tools:
+
+```bash
+python scripts/mcp_cli.py --token $ADMIN_BOOTSTRAP_KEY \
+  token create cline-dev --tools shell,http,network,date,calc,perplexity_search --expires 365
+```
+
+> **Full guide**: see [`starter-kit/CLINE_SETUP.md`](starter-kit/CLINE_SETUP.md) for config file paths by OS, multi-server setup, debugging, etc.
+
 ## Roadmap
 
 - **Phase 1** (current): shell, network, http, ssh, files, perplexity_search, perplexity_doc, date, calc — ✅

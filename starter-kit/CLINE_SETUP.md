@@ -34,6 +34,9 @@ Cline stocke ses serveurs MCP dans un fichier JSON :
 {
   "mcpServers": {
     "mon-mcp-service": {
+      "disabled": false,
+      "timeout": 60,
+      "type": "streamableHttp",
       "url": "http://localhost:8082/mcp",
       "headers": {
         "Authorization": "Bearer VOTRE_TOKEN_ICI"
@@ -45,8 +48,11 @@ Cline stocke ses serveurs MCP dans un fichier JSON :
 
 **Explications** :
 - `"mon-mcp-service"` — Nom libre, affiché dans Cline
+- `"type"` — **Obligatoire** : `"streamableHttp"` indique à Cline le transport MCP à utiliser
 - `"url"` — URL complète du endpoint MCP, **toujours avec `/mcp`** à la fin
+- `"timeout"` — Timeout en secondes (recommandé `60` pour les outils longs comme Perplexity ou SSH)
 - `"headers"` — Le Bearer token pour l'authentification
+- `"disabled"` — `false` par défaut, permet de désactiver le serveur sans supprimer la config
 - Le port `8082` est le port WAF (pas le port interne du service)
 
 ### 3.2 Avec la bootstrap key (développement)
@@ -55,6 +61,9 @@ Cline stocke ses serveurs MCP dans un fichier JSON :
 {
   "mcpServers": {
     "mcp-tools-dev": {
+      "disabled": false,
+      "timeout": 60,
+      "type": "streamableHttp",
       "url": "http://localhost:8082/mcp",
       "headers": {
         "Authorization": "Bearer change_me_in_production"
@@ -82,6 +91,9 @@ Puis utilisez le token brut retourné :
 {
   "mcpServers": {
     "mcp-tools": {
+      "disabled": false,
+      "timeout": 60,
+      "type": "streamableHttp",
       "url": "http://localhost:8082/mcp",
       "headers": {
         "Authorization": "Bearer mcp_a1b2c3d4e5f6g7h8..."
@@ -99,18 +111,27 @@ Vous pouvez connecter **plusieurs serveurs MCP** simultanément :
 {
   "mcpServers": {
     "mcp-tools": {
+      "disabled": false,
+      "timeout": 60,
+      "type": "streamableHttp",
       "url": "http://localhost:8082/mcp",
       "headers": {
         "Authorization": "Bearer TOKEN_TOOLS"
       }
     },
     "mcp-vault": {
+      "disabled": false,
+      "timeout": 60,
+      "type": "streamableHttp",
       "url": "http://localhost:8083/mcp",
       "headers": {
         "Authorization": "Bearer TOKEN_VAULT"
       }
     },
     "graph-memory": {
+      "disabled": false,
+      "timeout": 60,
+      "type": "streamableHttp",
       "url": "http://localhost:8084/mcp",
       "headers": {
         "Authorization": "Bearer TOKEN_MEMORY"
@@ -165,6 +186,9 @@ curl -H "Authorization: Bearer VOTRE_TOKEN" http://localhost:8082/mcp -d '{"json
 {
   "mcpServers": {
     "mcp-tools-prod": {
+      "disabled": false,
+      "timeout": 60,
+      "type": "streamableHttp",
       "url": "https://mcp-tools.mondomaine.com/mcp",
       "headers": {
         "Authorization": "Bearer TOKEN_PROD"
@@ -181,6 +205,8 @@ curl -H "Authorization: Bearer VOTRE_TOKEN" http://localhost:8082/mcp -d '{"json
   "mcpServers": {
     "mcp-tools": {
       "disabled": true,
+      "timeout": 60,
+      "type": "streamableHttp",
       "url": "http://localhost:8082/mcp",
       "headers": {
         "Authorization": "Bearer TOKEN"
@@ -195,7 +221,8 @@ curl -H "Authorization: Bearer VOTRE_TOKEN" http://localhost:8082/mcp -d '{"json
 | | SSE (ancien) | Streamable HTTP (actuel) |
 |---|---|---|
 | **Endpoint** | `/sse` | `/mcp` |
-| **Config Cline** | `"command": "..."` (stdio) ou `"url": ".../sse"` | `"url": ".../mcp"` |
+| **Config Cline `type`** | `"sse"` | `"streamableHttp"` |
+| **Config Cline `url`** | `"url": ".../sse"` | `"url": ".../mcp"` |
 | **Transport** | Server-Sent Events (GET) | HTTP POST + SSE optionnel |
 | **Compatibilité** | MCP SDK < 1.8 | MCP SDK ≥ 1.8 |
 
