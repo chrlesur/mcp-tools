@@ -23,7 +23,7 @@ docker compose up -d
 
 # Vérification
 curl http://localhost:8082/health
-# → {"status":"healthy","service":"mcp-tools","version":"0.1.7","transport":"streamable-http"}
+# → {"status":"healthy","service":"mcp-tools","version":"0.1.8","transport":"streamable-http"}
 
 # Console d'administration
 open http://localhost:8082/admin
@@ -81,6 +81,7 @@ python scripts/mcp_cli.py files write test.txt --content "Hello World"
 
 # Gestion des tokens (admin)
 python scripts/mcp_cli.py token create agent-prod --tools shell,date,calc --expires 90
+python scripts/mcp_cli.py token create ct-user --email user@cloud-temple.com --expires 180
 python scripts/mcp_cli.py token list
 python scripts/mcp_cli.py token info agent-prod
 python scripts/mcp_cli.py token revoke agent-prod
@@ -135,31 +136,31 @@ AdminMiddleware → HealthCheckMiddleware → AuthMiddleware → LoggingMiddlewa
 
 ### 3 couches (pattern Cloud Temple)
 
-| Couche           | Fichier                      | Rôle                       |
-| ---------------- | ---------------------------- | -------------------------- |
-| Outils MCP       | `src/mcp_tools/server.py`    | API MCP (Streamable HTTP)  |
-| CLI Click        | `scripts/cli/commands.py`    | Interface scriptable       |
-| Shell interactif | `scripts/cli/shell.py`       | Interface interactive      |
-| Affichage        | `scripts/cli/display.py`     | Rich partagé (couches 2+3) |
+| Couche           | Fichier                   | Rôle                       |
+| ---------------- | ------------------------- | -------------------------- |
+| Outils MCP       | `src/mcp_tools/server.py` | API MCP (Streamable HTTP)  |
+| CLI Click        | `scripts/cli/commands.py` | Interface scriptable       |
+| Shell interactif | `scripts/cli/shell.py`    | Interface interactive      |
+| Affichage        | `scripts/cli/display.py`  | Rich partagé (couches 2+3) |
 
 ### Outils disponibles (12/27 — Phase 1)
 
 > **Tous les paramètres** de chaque outil sont documentés avec des descriptions détaillées via le protocole MCP. Les clients compatibles (Cline, Claude Desktop…) affichent automatiquement ces descriptions.
 
-| Outil              | Description                                          |
-| ------------------ | ---------------------------------------------------- |
-| `shell`            | Sandbox Docker isolée (bash, sh, python3, node, openssl) — sans réseau |
-| `network`          | Diagnostic réseau en sandbox Docker (ping, traceroute, nslookup, dig) — IPs privées RFC 1918 interdites |
-| `http`             | Client HTTP/REST en sandbox Docker (anti-SSRF, auth basic/bearer/api_key) — IPs privées bloquées |
-| `ssh`              | Exécution de commandes et transfert de fichiers via SSH en sandbox Docker (exec, status, upload, download) — auth password/key |
-| `files`            | Opérations fichiers sur S3 Dell ECS en sandbox Docker (list, read, write, delete, info, diff, versions, enable_versioning) — config hybride SigV2/SigV4, versioning S3 |
-| `perplexity_search`| Recherche internet via Perplexity AI                 |
-| `perplexity_doc`   | Documentation technique d'une technologie/librairie/API via Perplexity AI |
-| `date`             | Manipulation de dates/heures (now, today, diff, add, format, parse, week_number, day_of_week) — fuseaux horaires |
-| `calc`             | Calculs mathématiques en sandbox Python Docker (expressions, math, statistics) — sans réseau |
-| `token`            | Gestion des tokens d'authentification MCP (create, list, info, revoke) — admin uniquement, isolation par tool_ids |
-| `system_health`    | Santé du service                                     |
-| `system_about`     | Métadonnées et liste des outils                      |
+| Outil               | Description                                                                                                                                                            |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `shell`             | Sandbox Docker isolée (bash, sh, python3, node, openssl) — sans réseau                                                                                                 |
+| `network`           | Diagnostic réseau en sandbox Docker (ping, traceroute, nslookup, dig) — IPs privées RFC 1918 interdites                                                                |
+| `http`              | Client HTTP/REST en sandbox Docker (anti-SSRF, auth basic/bearer/api_key) — IPs privées bloquées                                                                       |
+| `ssh`               | Exécution de commandes et transfert de fichiers via SSH en sandbox Docker (exec, status, upload, download) — auth password/key                                         |
+| `files`             | Opérations fichiers sur S3 Dell ECS en sandbox Docker (list, read, write, delete, info, diff, versions, enable_versioning) — config hybride SigV2/SigV4, versioning S3 |
+| `perplexity_search` | Recherche internet via Perplexity AI                                                                                                                                   |
+| `perplexity_doc`    | Documentation technique d'une technologie/librairie/API via Perplexity AI                                                                                              |
+| `date`              | Manipulation de dates/heures (now, today, diff, add, format, parse, week_number, day_of_week) — fuseaux horaires                                                       |
+| `calc`              | Calculs mathématiques en sandbox Python Docker (expressions, math, statistics) — sans réseau                                                                           |
+| `token`             | Gestion des tokens d'authentification MCP (create, list, info, revoke) — admin uniquement, isolation par tool_ids, email propriétaire                                  |
+| `system_health`     | Santé du service                                                                                                                                                       |
+| `system_about`      | Métadonnées et liste des outils                                                                                                                                        |
 
 ### Console d'administration (`/admin`)
 
@@ -190,26 +191,26 @@ Authentification admin requise (ADMIN_BOOTSTRAP_KEY ou token S3 avec permission 
 
 ### Serveur (.env)
 
-| Variable               | Description                     | Défaut                     |
-| ---------------------- | ------------------------------- | -------------------------- |
-| `WAF_PORT`             | Port WAF exposé                 | `8082`                     |
-| `MCP_SERVER_NAME`      | Nom du service                  | `mcp-tools`                |
-| `MCP_SERVER_PORT`      | Port interne MCP                | `8050`                     |
-| `ADMIN_BOOTSTRAP_KEY`  | Token admin (⚠️ changer !)     | `change_me_in_production`  |
-| `S3_ENDPOINT_URL`      | Endpoint S3                     |                            |
-| `S3_ACCESS_KEY_ID`     | Clé d'accès S3                  |                            |
-| `S3_SECRET_ACCESS_KEY` | Secret S3                       |                            |
-| `S3_BUCKET_NAME`       | Bucket S3                       | `mcp-tools`                |
-| `PERPLEXITY_API_KEY`   | Clé API Perplexity              |                            |
-| `PERPLEXITY_MODEL`     | Modèle Perplexity               | `sonar-reasoning-pro`      |
-| `SANDBOX_DNS`          | DNS pour sandbox réseau          | `8.8.8.8,8.8.4.4`         |
+| Variable               | Description                  | Défaut                    |
+| ---------------------- | ---------------------------- | ------------------------- |
+| `WAF_PORT`             | Port WAF exposé              | `8082`                    |
+| `MCP_SERVER_NAME`      | Nom du service               | `mcp-tools`               |
+| `MCP_SERVER_PORT`      | Port interne MCP             | `8050`                    |
+| `ADMIN_BOOTSTRAP_KEY`  | Token admin (⚠️ changer !) | `change_me_in_production` |
+| `S3_ENDPOINT_URL`      | Endpoint S3                  |                           |
+| `S3_ACCESS_KEY_ID`     | Clé d'accès S3               |                           |
+| `S3_SECRET_ACCESS_KEY` | Secret S3                    |                           |
+| `S3_BUCKET_NAME`       | Bucket S3                    | `mcp-tools`               |
+| `PERPLEXITY_API_KEY`   | Clé API Perplexity           |                           |
+| `PERPLEXITY_MODEL`     | Modèle Perplexity            | `sonar-reasoning-pro`     |
+| `SANDBOX_DNS`          | DNS pour sandbox réseau      | `8.8.8.8,8.8.4.4`         |
 
 ### Client CLI
 
-| Variable    | Description        | Défaut                    |
-| ----------- | ------------------ | ------------------------- |
-| `MCP_URL`   | URL du serveur     | `http://localhost:8082`   |
-| `MCP_TOKEN` | Token d'auth       | (vide)                    |
+| Variable    | Description    | Défaut                  |
+| ----------- | -------------- | ----------------------- |
+| `MCP_URL`   | URL du serveur | `http://localhost:8082` |
+| `MCP_TOKEN` | Token d'auth   | (vide)                  |
 
 ## Structure des fichiers
 
@@ -256,13 +257,13 @@ Pour connecter MCP Tools à **Cline**, ajoutez dans votre `cline_mcp_settings.js
 }
 ```
 
-| Paramètre | Valeur | Description |
-|-----------|--------|-------------|
-| `type` | `streamableHttp` | **Obligatoire** — indique à Cline le transport MCP à utiliser |
-| `url` | `http://localhost:8082/mcp` | Endpoint Streamable HTTP (via WAF, **toujours `/mcp`**) |
-| `timeout` | `60` | Timeout en secondes (recommandé pour les outils longs) |
-| `Authorization` | `Bearer VOTRE_TOKEN` | Bootstrap key ou token S3 |
-| `disabled` | `false` | Permet de désactiver le serveur sans supprimer la config |
+| Paramètre       | Valeur                      | Description                                                   |
+| --------------- | --------------------------- | ------------------------------------------------------------- |
+| `type`          | `streamableHttp`            | **Obligatoire** — indique à Cline le transport MCP à utiliser |
+| `url`           | `http://localhost:8082/mcp` | Endpoint Streamable HTTP (via WAF, **toujours `/mcp`**)       |
+| `timeout`       | `60`                        | Timeout en secondes (recommandé pour les outils longs)        |
+| `Authorization` | `Bearer VOTRE_TOKEN`        | Bootstrap key ou token S3                                     |
+| `disabled`      | `false`                     | Permet de désactiver le serveur sans supprimer la config      |
 
 Pour créer un token dédié à Cline avec des outils spécifiques :
 

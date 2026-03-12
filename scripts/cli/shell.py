@@ -300,6 +300,7 @@ async def cmd_token(client, state, args="", json_output=False):
         show_warning("")
         show_warning("  token create agent-prod --tools shell,date,calc --expires 90")
         show_warning("  token create readonly --permissions read --tools date,calc")
+        show_warning("  token create ct-user --email user@cloud-temple.com --expires 180")
         show_warning("  token list")
         show_warning("  token info agent-prod")
         show_warning("  token revoke agent-prod")
@@ -319,6 +320,8 @@ async def cmd_token(client, state, args="", json_output=False):
                 params["tool_ids"] = [t.strip() for t in val.split(",") if t.strip()]
             elif key == "permissions":
                 params["permissions"] = [p.strip() for p in val.split(",") if p.strip()]
+            elif key == "email":
+                params["email"] = val
             else:
                 params[key] = val
             i += 2

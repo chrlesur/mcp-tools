@@ -23,7 +23,7 @@ docker compose up -d
 
 # Verify
 curl http://localhost:8082/health
-# → {"status":"healthy","service":"mcp-tools","version":"0.1.7","transport":"streamable-http"}
+# → {"status":"healthy","service":"mcp-tools","version":"0.1.8","transport":"streamable-http"}
 
 # Admin console
 open http://localhost:8082/admin
@@ -74,13 +74,14 @@ python scripts/mcp_cli.py doc "FastAPI" --context "middleware and dependencies"
 python scripts/mcp_cli.py ssh exec myserver.com --user admin --password secret "uptime"
 python scripts/mcp_cli.py ssh status myserver.com --user admin --password secret
 
-# S3 Files
+# S3 files
 python scripts/mcp_cli.py files list --prefix logs/
 python scripts/mcp_cli.py files read config/app.yaml
 python scripts/mcp_cli.py files write test.txt --content "Hello World"
 
 # Token management (admin)
 python scripts/mcp_cli.py token create agent-prod --tools shell,date,calc --expires 90
+python scripts/mcp_cli.py token create ct-user --email user@cloud-temple.com --expires 180
 python scripts/mcp_cli.py token list
 python scripts/mcp_cli.py token info agent-prod
 python scripts/mcp_cli.py token revoke agent-prod
@@ -135,31 +136,31 @@ AdminMiddleware → HealthCheckMiddleware → AuthMiddleware → LoggingMiddlewa
 
 ### 3-layer pattern (Cloud Temple standard)
 
-| Layer            | File                         | Role                       |
-| ---------------- | ---------------------------- | -------------------------- |
-| MCP Tools        | `src/mcp_tools/server.py`    | MCP API (Streamable HTTP)  |
-| CLI Click        | `scripts/cli/commands.py`    | Scriptable interface       |
-| Interactive Shell| `scripts/cli/shell.py`       | Interactive interface      |
-| Display          | `scripts/cli/display.py`     | Shared Rich output (2+3)  |
+| Layer            | File                      | Role                       |
+| ---------------- | ------------------------- | -------------------------- |
+| MCP Tools        | `src/mcp_tools/server.py` | MCP API (Streamable HTTP)  |
+| CLI Click        | `scripts/cli/commands.py` | Scriptable interface       |
+| Interactive Shell| `scripts/cli/shell.py`    | Interactive interface      |
+| Display          | `scripts/cli/display.py`  | Shared Rich output (2+3)  |
 
 ### Available Tools (12/27 — Phase 1)
 
 > **All parameters** for each tool are documented with detailed descriptions via the MCP protocol. Compatible clients (Cline, Claude Desktop…) automatically display these descriptions.
 
-| Tool               | Description                                          |
-| ------------------ | ---------------------------------------------------- |
-| `shell`            | Isolated Docker sandbox (bash, sh, python3, node, openssl) — no network |
-| `network`          | Network diagnostics in Docker sandbox (ping, traceroute, nslookup, dig) — RFC 1918 private IPs blocked |
-| `http`             | HTTP/REST client in Docker sandbox (anti-SSRF, auth basic/bearer/api_key) — private IPs blocked |
-| `ssh`              | SSH command execution and file transfer in Docker sandbox (exec, status, upload, download) — password/key auth |
-| `files`            | File operations on S3 Dell ECS in Docker sandbox (list, read, write, delete, info, diff, versions, enable_versioning) — hybrid SigV2/SigV4 config, S3 versioning |
-| `perplexity_search`| Internet search via Perplexity AI                    |
-| `perplexity_doc`   | Technical documentation for a technology/library/API via Perplexity AI |
-| `date`             | Date/time manipulation (now, today, diff, add, format, parse, week_number, day_of_week) — timezone support |
-| `calc`             | Math calculations in Python Docker sandbox (expressions, math, statistics) — no network |
-| `token`            | MCP authentication token management (create, list, info, revoke) — admin only, tool_ids isolation |
-| `system_health`    | Service health check                                 |
-| `system_about`     | Metadata and tool listing                            |
+| Tool               | Description                                                                                                                                                            |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `shell`             | Isolated Docker sandbox (bash, sh, python3, node, openssl) — no network                                                                                                |
+| `network`           | Network diagnostics in Docker sandbox (ping, traceroute, nslookup, dig) — RFC 1918 private IPs blocked                                                                 |
+| `http`              | HTTP/REST client in Docker sandbox (anti-SSRF, auth basic/bearer/api_key) — private IPs blocked                                                                        |
+| `ssh`               | SSH command execution and file transfer in Docker sandbox (exec, status, upload, download) — password/key auth                                                          |
+| `files`             | File operations on S3 Dell ECS in Docker sandbox (list, read, write, delete, info, diff, versions, enable_versioning) — hybrid SigV2/SigV4 config, S3 versioning       |
+| `perplexity_search` | Internet search via Perplexity AI                                                                                                                                      |
+| `perplexity_doc`    | Technical documentation for a technology/library/API via Perplexity AI                                                                                                 |
+| `date`              | Date/time manipulation (now, today, diff, add, format, parse, week_number, day_of_week) — timezone support                                                             |
+| `calc`              | Math calculations in Python Docker sandbox (expressions, math, statistics) — no network                                                                                |
+| `token`             | MCP authentication token management (create, list, info, revoke) — admin only, tool_ids isolation, owner email                                                         |
+| `system_health`     | Service health check                                                                                                                                                   |
+| `system_about`      | Metadata and tool listing                                                                                                                                              |
 
 ### Admin Console (`/admin`)
 
@@ -190,26 +191,50 @@ Admin authentication required (ADMIN_BOOTSTRAP_KEY or S3 token with admin permis
 
 ### Server (.env)
 
-| Variable               | Description                     | Default                    |
-| ---------------------- | ------------------------------- | -------------------------- |
-| `WAF_PORT`             | Exposed WAF port                | `8082`                     |
-| `MCP_SERVER_NAME`      | Service name                    | `mcp-tools`                |
-| `MCP_SERVER_PORT`      | Internal MCP port               | `8050`                     |
-| `ADMIN_BOOTSTRAP_KEY`  | Admin token (⚠️ change it!)    | `change_me_in_production`  |
-| `S3_ENDPOINT_URL`      | S3 endpoint                     |                            |
-| `S3_ACCESS_KEY_ID`     | S3 access key                   |                            |
-| `S3_SECRET_ACCESS_KEY` | S3 secret                       |                            |
-| `S3_BUCKET_NAME`       | S3 bucket                       | `mcp-tools`                |
-| `PERPLEXITY_API_KEY`   | Perplexity API key              |                            |
-| `PERPLEXITY_MODEL`     | Perplexity model                | `sonar-reasoning-pro`      |
-| `SANDBOX_DNS`          | DNS for network sandboxes        | `8.8.8.8,8.8.4.4`         |
+| Variable               | Description                  | Default                    |
+| ---------------------- | ---------------------------- | -------------------------- |
+| `WAF_PORT`             | Exposed WAF port             | `8082`                     |
+| `MCP_SERVER_NAME`      | Service name                 | `mcp-tools`                |
+| `MCP_SERVER_PORT`      | Internal MCP port            | `8050`                     |
+| `ADMIN_BOOTSTRAP_KEY`  | Admin token (⚠️ change it!)| `change_me_in_production`  |
+| `S3_ENDPOINT_URL`      | S3 endpoint                  |                            |
+| `S3_ACCESS_KEY_ID`     | S3 access key                |                            |
+| `S3_SECRET_ACCESS_KEY` | S3 secret                    |                            |
+| `S3_BUCKET_NAME`       | S3 bucket                    | `mcp-tools`                |
+| `PERPLEXITY_API_KEY`   | Perplexity API key           |                            |
+| `PERPLEXITY_MODEL`     | Perplexity model             | `sonar-reasoning-pro`      |
+| `SANDBOX_DNS`          | DNS for network sandboxes    | `8.8.8.8,8.8.4.4`         |
 
 ### CLI Client
 
-| Variable    | Description        | Default                   |
-| ----------- | ------------------ | ------------------------- |
-| `MCP_URL`   | Server URL         | `http://localhost:8082`   |
-| `MCP_TOKEN` | Auth token         | (empty)                   |
+| Variable    | Description    | Default                 |
+| ----------- | -------------- | ----------------------- |
+| `MCP_URL`   | Server URL     | `http://localhost:8082` |
+| `MCP_TOKEN` | Auth token     | (empty)                 |
+
+## File Structure
+
+```
+mcp-tools/
+├── src/mcp_tools/
+│   ├── server.py              # MCP Server + HealthCheck + banner
+│   ├── config.py              # pydantic-settings configuration (sandbox, etc.)
+│   ├── admin/                 # Web admin console (/admin)
+│   ├── static/                # Admin static files (HTML, CSS, JS)
+│   ├── auth/                  # Auth middleware + S3 Token Store
+│   └── tools/                 # MCP tools (shell, network, http, perplexity)
+├── sandbox/
+│   └── Dockerfile             # Alpine sandbox image (python3, node, openssl…)
+├── scripts/
+│   ├── mcp_cli.py             # CLI entry point
+│   ├── test_service.py        # E2E test suite (--test NAME to target)
+│   └── cli/                   # CLI Click + Shell + Display
+├── waf/                       # WAF Caddy + Coraza
+├── Dockerfile                 # Python 3.11 + static docker CLI
+├── docker-compose.yml         # sandbox + mcp-tools + waf + docker.sock
+├── .env.example
+└── VERSION
+```
 
 ## Configure in Cline (VS Code / VSCodium)
 
@@ -232,13 +257,13 @@ To connect MCP Tools to **Cline**, add the following to your `cline_mcp_settings
 }
 ```
 
-| Parameter | Value | Description |
-|-----------|-------|-------------|
-| `type` | `streamableHttp` | **Required** — tells Cline which MCP transport to use |
-| `url` | `http://localhost:8082/mcp` | Streamable HTTP endpoint (via WAF, **always `/mcp`**) |
-| `timeout` | `60` | Timeout in seconds (recommended for long-running tools) |
-| `Authorization` | `Bearer YOUR_TOKEN` | Bootstrap key or S3 token |
-| `disabled` | `false` | Allows disabling the server without removing the config |
+| Parameter        | Value                       | Description                                                    |
+| ---------------- | --------------------------- | -------------------------------------------------------------- |
+| `type`           | `streamableHttp`            | **Required** — tells Cline which MCP transport to use          |
+| `url`            | `http://localhost:8082/mcp` | Streamable HTTP endpoint (via WAF, **always `/mcp`**)          |
+| `timeout`        | `60`                        | Timeout in seconds (recommended for long-running tools)        |
+| `Authorization`  | `Bearer YOUR_TOKEN`         | Bootstrap key or S3 token                                      |
+| `disabled`       | `false`                     | Allows disabling the server without removing the config        |
 
 To create a dedicated token for Cline with specific tools:
 

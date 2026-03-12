@@ -37,6 +37,7 @@ def register(mcp: FastMCP) -> None:
         permissions: Annotated[Optional[List[str]], Field(default=None, description="Permissions du token (ex: ['read', 'write', 'admin']). Défaut: ['read', 'write']")] = None,
         tool_ids: Annotated[Optional[List[str]], Field(default=None, description="Liste des IDs d'outils autorisés (ex: ['shell', 'http', 'calc']). Vide = tous les outils")] = None,
         expires_days: Annotated[int, Field(default=90, description="Durée de validité en jours (0 = jamais d'expiration)")] = 90,
+        email: Annotated[Optional[str], Field(default=None, description="Email du propriétaire du token (optionnel, pour traçabilité)")] = None,
         ctx: Optional[Context] = None,
     ) -> dict:
         """Gestion des tokens d'authentification MCP (admin uniquement). Opérations : create, list, info, revoke. Chaque token restreint l'accès aux outils via tool_ids."""
@@ -80,6 +81,7 @@ def register(mcp: FastMCP) -> None:
                     tool_ids=tools,
                     expires_days=expires_days,
                     created_by=created_by,
+                    email=email or "",
                 )
 
             # --- LIST ---

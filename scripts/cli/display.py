@@ -372,6 +372,9 @@ def show_token_result(result: dict):
             border_style="yellow",
         ))
         console.print(f"  Client      : [cyan]{client_name}[/cyan]")
+        email = result.get("email", "")
+        if email:
+            console.print(f"  Email       : [cyan]{email}[/cyan]")
         console.print(f"  Permissions : [green]{', '.join(result.get('permissions', []))}[/green]")
         tool_ids = result.get("tool_ids", [])
         if tool_ids:
@@ -390,6 +393,7 @@ def show_token_result(result: dict):
         if tokens:
             table = Table(show_header=True)
             table.add_column("Client", style="cyan bold", min_width=15)
+            table.add_column("Email", style="dim")
             table.add_column("Permissions", style="green")
             table.add_column("Outils (tool_ids)", style="white")
             table.add_column("Expire", style="dim")
@@ -403,6 +407,7 @@ def show_token_result(result: dict):
                     exp = exp[:10]
                 table.add_row(
                     t.get("client_name", "?"),
+                    t.get("email", "") or "",
                     ", ".join(t.get("permissions", [])),
                     tool_str,
                     exp,
@@ -415,6 +420,9 @@ def show_token_result(result: dict):
     if "client_name" in result:
         cn = result.get("client_name", "?")
         console.print(f"\n{icon} [bold]Token : {cn}[/bold]")
+        email = result.get("email", "")
+        if email:
+            console.print(f"  Email       : [cyan]{email}[/cyan]")
         console.print(f"  Permissions : [green]{', '.join(result.get('permissions', []))}[/green]")
         tool_ids = result.get("tool_ids", [])
         if tool_ids:

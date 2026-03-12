@@ -4,6 +4,19 @@ All notable changes to MCP Tools will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.1.8] — 2026-03-12
+
+### Added
+- **Champ `email` sur les tokens** — Nouveau paramètre optionnel `email` pour la traçabilité des propriétaires de tokens. Stocké dans le JSON S3, affiché dans `token list` (colonne Email), `token info` et `token create`. Rétrocompatible : les tokens existants sans email affichent une cellule vide
+- **CLI `--email`** — Option `--email` sur `token create` (Click et shell interactif). Ex : `token create ct-user --email user@cloud-temple.com --expires 180`
+- **Console admin** — Le formulaire de création de token dans `/admin` supporte le champ `email`
+
+### Changed
+- **64 paramètres MCP** — Le nouveau paramètre `email` porte le total à 64 paramètres documentés avec `Annotated[type, Field(description="...")]`
+
+### Known Issues
+- **Permissions `read`/`write` non implémentées** — Seule la permission `admin` est vérifiée dans `check_tool_access()`. Les permissions `read` et `write` sont stockées en S3 et affichées mais jamais contrôlées. Tout token authentifié a les mêmes droits (seul `tool_ids` filtre les outils). À implémenter dans une version future
+
 ## [0.1.7] — 2026-03-08
 
 ### Fixed

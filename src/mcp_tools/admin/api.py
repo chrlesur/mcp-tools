@@ -381,6 +381,7 @@ async def _handle_tokens_create(receive, send):
     permissions = data.get("permissions", ["read"])
     tool_ids = data.get("tool_ids", [])
     expires_days = data.get("expires_days", 90)
+    email = data.get("email", "")
 
     if not client_name:
         await _send_json(send, {"status": "error", "message": "client_name requis"}, 400)
@@ -393,6 +394,7 @@ async def _handle_tokens_create(receive, send):
         tool_ids=tool_ids,
         expires_days=expires_days,
         created_by="admin-ui",
+        email=email,
     )
     await _send_json(send, result)
 

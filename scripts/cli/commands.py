@@ -530,9 +530,10 @@ def token_group(ctx):
 @click.option("--tools", "-t", "tool_ids_str", default="", help="Outils autorisés (séparés par virgule). Vide = tous.")
 @click.option("--permissions", "-p", default="read,write", help="Permissions (séparées par virgule)")
 @click.option("--expires", "-e", default=90, type=int, help="Expiration en jours (0 = jamais)")
+@click.option("--email", default="", help="Email du propriétaire (optionnel, traçabilité)")
 @click.option("--json", "-j", "output_json", is_flag=True, help="Sortie JSON brute")
 @click.pass_context
-def token_create(ctx, name, tool_ids_str, permissions, expires, output_json):
+def token_create(ctx, name, tool_ids_str, permissions, expires, email, output_json):
     """Créer un nouveau token.
 
     \b
@@ -540,18 +541,22 @@ def token_create(ctx, name, tool_ids_str, permissions, expires, output_json):
       token create agent-prod --tools shell,date,calc --expires 90
       token create cline-dev --tools shell,http,network,date,calc --expires 365
       token create readonly-agent --permissions read --tools date,calc
+      token create ct-user --email user@cloud-temple.com --expires 180
     """
     async def _run():
         client = MCPClient(ctx.obj["url"], ctx.obj["token"])
         tools = [t.strip() for t in tool_ids_str.split(",") if t.strip()] if tool_ids_str else []
         perms = [p.strip() for p in permissions.split(",") if p.strip()]
-        result = await client.call_tool("token", {
+        params = {
             "operation": "create",
             "client_name": name,
             "tool_ids": tools,
             "permissions": perms,
             "expires_days": expires,
-        })
+        }
+        if email:
+            params["email"] = email
+        result = await client.call_tool("token", params)
         if output_json:
             show_json(result)
         else:

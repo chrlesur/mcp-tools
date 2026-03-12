@@ -188,6 +188,7 @@ class TokenStore:
         tool_ids: List[str],
         expires_days: int = 90,
         created_by: str = "admin",
+        email: str = "",
     ) -> dict:
         """
         Crée un nouveau token. Retourne le token brut (affiché une seule fois).
@@ -209,6 +210,7 @@ class TokenStore:
         token_data = {
             "token_hash": token_hash,
             "client_name": client_name,
+            "email": email,
             "permissions": permissions,
             "tool_ids": tool_ids,
             "created_at": now.isoformat(),
@@ -239,6 +241,7 @@ class TokenStore:
             "token": raw_token,  # ⚠️ Affiché UNE SEULE FOIS
             "token_hash": token_hash[:16] + "...",
             "client_name": client_name,
+            "email": email,
             "permissions": permissions,
             "tool_ids": tool_ids,
             "expires_at": expires.isoformat() if expires else None,
@@ -264,6 +267,7 @@ class TokenStore:
 
             tokens.append({
                 "client_name": data.get("client_name", "?"),
+                "email": data.get("email", ""),
                 "permissions": data.get("permissions", []),
                 "tool_ids": data.get("tool_ids", []),
                 "created_at": data.get("created_at", "?"),
@@ -302,6 +306,7 @@ class TokenStore:
                 return {
                     "status": "success",
                     "client_name": data.get("client_name"),
+                    "email": data.get("email", ""),
                     "permissions": data.get("permissions", []),
                     "tool_ids": data.get("tool_ids", []),
                     "created_at": data.get("created_at", "?"),
